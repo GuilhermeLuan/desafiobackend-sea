@@ -1,0 +1,14 @@
+spring:
+  config:
+    import: optional:file:.env[.properties]
+  application:
+    name: desafiobackend-sea
+  docker:
+    compose:
+      file: compose.yaml
+      skip:
+        in-tests: false
+
+  jwt:
+    secret: ${JWT_SECRET}
+    expiration: ${JWT_EXPIRATION:36000}
