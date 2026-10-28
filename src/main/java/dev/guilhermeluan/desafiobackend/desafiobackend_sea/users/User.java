@@ -15,14 +15,15 @@ public class User {
     @Column(nullable = false)
     private String passwordHash;
 
+    @Enumerated(EnumType.STRING)
     @Column(nullable = false)
-    private String role;
+    private Role role;
 
 
     public User() {
     }
 
-    public User(Long id, String email, String passwordHash, String role) {
+    public User(Long id, String email, String passwordHash, Role role) {
         this.id = id;
         this.email = email;
         this.passwordHash = passwordHash;
@@ -53,11 +54,11 @@ public class User {
         this.passwordHash = passwordHash;
     }
 
-    public String getRole() {
+    public Role getRole() {
         return role;
     }
 
-    public void setRole(String role) {
+    public void setRole(Role role) {
         this.role = role;
     }
 }
