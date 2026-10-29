@@ -1,6 +1,5 @@
 package dev.guilhermeluan.desafiobackend.desafiobackend_sea.auth.jwt;
 
-import dev.guilhermeluan.desafiobackend.desafiobackend_sea.auth.JwtUtils;
 import dev.guilhermeluan.desafiobackend.desafiobackend_sea.users.Role;
 import io.jsonwebtoken.Claims;
 import io.jsonwebtoken.JwtException;
