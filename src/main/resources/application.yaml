@@ -10,6 +10,6 @@ spring:
         in-tests: false
 
 jwt:
-  secret: ${JWT_SECRET}
+  secret: ${JWT_SECRET:test-secret-with-at-least-32-bytes-of-length!!}
   expiration: ${JWT_EXPIRATION:3600}
   issuer: ${JWT_ISSUER:desafiobackend-sea}

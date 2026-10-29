@@ -1,6 +1,7 @@
 package dev.guilhermeluan.desafiobackend.desafiobackend_sea.auth;
 
 import io.jsonwebtoken.Claims;
+import io.jsonwebtoken.ExpiredJwtException;
 import io.jsonwebtoken.JwtException;
 import io.jsonwebtoken.JwtParser;
 import io.jsonwebtoken.Jwts;
@@ -85,6 +86,8 @@ public class JwtUtils {
         try {
             getClaims(token);
             return true;
+        } catch (ExpiredJwtException e) {
+            log.debug("JWT token expired: {}", e.getMessage());
         } catch (JwtException e) {
             log.warn("JWT token validation error: {}", e.getMessage());
         }
