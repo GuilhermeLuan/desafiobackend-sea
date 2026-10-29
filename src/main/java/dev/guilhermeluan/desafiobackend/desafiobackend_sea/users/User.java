@@ -2,6 +2,9 @@ package dev.guilhermeluan.desafiobackend.desafiobackend_sea.users;
 
 import jakarta.persistence.*;
 
+import java.util.HashSet;
+import java.util.Set;
+
 @Entity
 @Table(name = "tb_users")
 public class User {
@@ -19,6 +22,10 @@ public class User {
     @Column(nullable = false)
     private Role role;
 
+    @ElementCollection(fetch = FetchType.LAZY)
+    @CollectionTable(name = "tb_user_coverage", joinColumns = @JoinColumn(name = "user_id"))
+    @Column(name = "uf", nullable = false, length = 2, columnDefinition = "char(2)")
+    private Set<String> coverageUfs = new HashSet<>();
 
     public User() {
     }
@@ -60,5 +67,13 @@ public class User {
 
     public void setRole(Role role) {
         this.role = role;
+    }
+
+    public Set<String> getCoverageUfs() {
+        return coverageUfs;
+    }
+
+    public void setCoverageUfs(Set<String> coverageUfs) {
+        this.coverageUfs = coverageUfs;
     }
 }

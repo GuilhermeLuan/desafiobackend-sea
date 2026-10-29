@@ -1,6 +1,7 @@
 package dev.guilhermeluan.desafiobackend.desafiobackend_sea.exception;
 
 import dev.guilhermeluan.desafiobackend.desafiobackend_sea.users.EmailAlreadyRegisteredException;
+import dev.guilhermeluan.desafiobackend.desafiobackend_sea.users.InvalidCoverageException;
 import dev.guilhermeluan.desafiobackend.desafiobackend_sea.users.InvalidRoleException;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.ProblemDetail;
@@ -26,5 +27,10 @@ public class GlobalExceptionHandler extends ResponseEntityExceptionHandler {
     @ExceptionHandler(BadCredentialsException.class)
     public ProblemDetail handleBadCredentials(BadCredentialsException e) {
         return ProblemDetail.forStatusAndDetail(HttpStatus.UNAUTHORIZED, "Invalid email or password");
+    }
+
+    @ExceptionHandler(InvalidCoverageException.class)
+    public ProblemDetail handleInvalidCoverage(InvalidCoverageException e) {
+        return ProblemDetail.forStatusAndDetail(HttpStatus.BAD_REQUEST, e.getMessage());
     }
 }

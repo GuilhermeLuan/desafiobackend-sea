@@ -23,7 +23,7 @@ public class UserController {
     @PostMapping
     @ResponseStatus(HttpStatus.CREATED)
     public UserResponse createUser(@Valid @RequestBody CreateUserRequest request) {
-        User user = userService.createPrivilegedUser(request.email(), request.password(), request.role());
-        return new UserResponse(user.getId(), user.getEmail(), user.getRole());
+        User user = userService.createPrivilegedUser(request.email(), request.password(), request.role(), request.coverageUfs());
+        return new UserResponse(user.getId(), user.getEmail(), user.getRole(), user.getCoverageUfs());
     }
 }

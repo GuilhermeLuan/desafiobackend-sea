@@ -9,6 +9,9 @@ import org.mockito.junit.jupiter.MockitoExtension;
 import org.springframework.dao.DataIntegrityViolationException;
 import org.springframework.security.crypto.password.PasswordEncoder;
 
+import java.util.HashSet;
+import java.util.Set;
+
 import static org.junit.jupiter.api.Assertions.assertEquals;
 import static org.junit.jupiter.api.Assertions.assertThrows;
 import static org.mockito.ArgumentMatchers.any;
@@ -45,6 +48,7 @@ class UserServiceTest {
         assertEquals(Role.ANALYST, saved.getValue().getRole());
         assertEquals(1L, created.getId());
         assertEquals("a@example.com", created.getEmail());
+        assertEquals(Set.of(), created.getCoverageUfs());
     }
 
     @Test
@@ -73,14 +77,51 @@ class UserServiceTest {
         when(encoder.encode("password123")).thenReturn("hashed");
         when(userRepository.saveAndFlush(any(User.class))).thenAnswer(i -> i.getArgument(0));
 
-        assertEquals(Role.ANALYST, userService.createPrivilegedUser("a@example.com", "password123", Role.ANALYST).getRole());
-        assertEquals(Role.ADMIN, userService.createPrivilegedUser("b@example.com", "password123", Role.ADMIN).getRole());
+        Set<String> coverageUfs = new HashSet<>();
+        coverageUfs.add("DF");
+        coverageUfs.add("SP");
+
+
+        User analyst = userService.createPrivilegedUser("a@example.com", "password123", Role.ANALYST, coverageUfs);
+        assertEquals(Role.ANALYST, analyst.getRole());
+        assertEquals(Set.of("DF", "SP"), analyst.getCoverageUfs());
+        assertEquals(Role.ADMIN, userService.createPrivilegedUser("b@example.com", "password123", Role.ADMIN, Set.of()).getRole());
     }
 
     @Test
     void createPrivilegedUserRejectsClientRole() {
         assertThrows(InvalidRoleException.class,
-                () -> userService.createPrivilegedUser("a@example.com", "password123", Role.CLIENT));
+                () -> userService.createPrivilegedUser("a@example.com", "password123", Role.CLIENT, Set.of()));
+
+        verify(userRepository, never()).saveAndFlush(any());
+    }
+
+
+    @Test
+    void createAnalystWithoutUfsIsRejected() {
+        assertThrows(InvalidCoverageException.class,
+                () -> userService.createPrivilegedUser("a@example.com", "password123", Role.ANALYST, Set.of()));
+        assertThrows(InvalidCoverageException.class,
+                () -> userService.createPrivilegedUser("a@example.com", "password123", Role.ANALYST, null));
+
+        verify(userRepository, never()).saveAndFlush(any());
+    }
+
+    @Test
+    void createAdminWithNullUfsIsAccepted() {
+        when(userRepository.existsByEmail(any())).thenReturn(false);
+        when(encoder.encode("password123")).thenReturn("hashed");
+        when(userRepository.saveAndFlush(any(User.class))).thenAnswer(i -> i.getArgument(0));
+
+        User admin = userService.createPrivilegedUser("a@example.com", "password123", Role.ADMIN, null);
+
+        assertEquals(Set.of(), admin.getCoverageUfs());
+    }
+
+    @Test
+    void createAdminUserRejectsUfs() {
+        assertThrows(InvalidCoverageException.class,
+                () -> userService.createPrivilegedUser("a@example.com", "password123", Role.ADMIN, Set.of("DF", "SP")));
 
         verify(userRepository, never()).saveAndFlush(any());
     }
