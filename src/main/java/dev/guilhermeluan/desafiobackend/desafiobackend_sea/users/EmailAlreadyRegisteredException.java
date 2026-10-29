@@ -1,4 +1,4 @@
-package dev.guilhermeluan.desafiobackend.desafiobackend_sea.auth;
+package dev.guilhermeluan.desafiobackend.desafiobackend_sea.users;
 
 public class EmailAlreadyRegisteredException extends RuntimeException {
 

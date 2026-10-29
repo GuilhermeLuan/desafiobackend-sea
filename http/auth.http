@@ -1,4 +1,4 @@
-### Register
+### Registro (sempre cria um CLIENT)
 POST {{host}}/auth/register
 Content-Type: application/json
 
@@ -7,7 +7,7 @@ Content-Type: application/json
   "password": "{{password}}"
 }
 
-### Register with the same email again -> 409
+### Registro com o mesmo e-mail novamente -> 409
 POST {{host}}/auth/register
 Content-Type: application/json
 
@@ -16,7 +16,7 @@ Content-Type: application/json
   "password": "{{password}}"
 }
 
-### Register with invalid body -> 400
+### Registro com corpo inválido -> 400
 POST {{host}}/auth/register
 Content-Type: application/json
 
@@ -25,7 +25,7 @@ Content-Type: application/json
   "password": "123"
 }
 
-### Login (stores the token in the "token" variable)
+### Login (guarda o token na variável "token")
 POST {{host}}/auth/login
 Content-Type: application/json
 
@@ -38,7 +38,7 @@ Content-Type: application/json
     client.global.set("token", response.body.token);
 %}
 
-### Login with wrong password -> 401
+### Login com senha incorreta -> 401
 POST {{host}}/auth/login
 Content-Type: application/json
 
@@ -47,9 +47,9 @@ Content-Type: application/json
   "password": "wrong-password"
 }
 
-### Protected endpoint without token -> 401
+### Endpoint protegido sem token -> 401
 GET {{host}}/anything
 
-### Protected endpoint with token (404 means the token was accepted, there is no such route yet)
+### Endpoint protegido com token (404 significa que o token foi aceito, pois ainda não existe essa rota)
 GET {{host}}/anything
 Authorization: Bearer {{token}}

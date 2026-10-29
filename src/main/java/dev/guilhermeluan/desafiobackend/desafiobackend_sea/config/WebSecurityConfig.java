@@ -1,5 +1,6 @@
 package dev.guilhermeluan.desafiobackend.desafiobackend_sea.config;
 
+import dev.guilhermeluan.desafiobackend.desafiobackend_sea.auth.jwt.AuthAccessDeniedHandler;
 import dev.guilhermeluan.desafiobackend.desafiobackend_sea.auth.jwt.AuthEntryPointJwt;
 import dev.guilhermeluan.desafiobackend.desafiobackend_sea.auth.jwt.AuthTokenFilter;
 import org.springframework.boot.web.servlet.FilterRegistrationBean;
@@ -19,9 +20,11 @@ import org.springframework.security.web.authentication.UsernamePasswordAuthentic
 public class WebSecurityConfig {
 
     private final AuthEntryPointJwt authEntryPointJwt;
+    private final AuthAccessDeniedHandler authAccessDeniedHandler;
 
-    public WebSecurityConfig(AuthEntryPointJwt authEntryPointJwt) {
+    public WebSecurityConfig(AuthEntryPointJwt authEntryPointJwt, AuthAccessDeniedHandler authAccessDeniedHandler) {
         this.authEntryPointJwt = authEntryPointJwt;
+        this.authAccessDeniedHandler = authAccessDeniedHandler;
     }
 
 
@@ -48,10 +51,13 @@ public class WebSecurityConfig {
     public SecurityFilterChain securityFilterChain(HttpSecurity http, AuthTokenFilter authTokenFilter) throws Exception {
         http
                 .csrf(AbstractHttpConfigurer::disable)
-                .exceptionHandling(e -> e.authenticationEntryPoint(authEntryPointJwt))
+                .exceptionHandling(e -> e
+                        .authenticationEntryPoint(authEntryPointJwt)
+                        .accessDeniedHandler(authAccessDeniedHandler))
                 .sessionManagement(s -> s.sessionCreationPolicy(SessionCreationPolicy.STATELESS))
                 .authorizeHttpRequests(a -> a
                         .requestMatchers("/auth/**").permitAll()
+                        .requestMatchers("/admin/**").hasRole("ADMIN")
                         .anyRequest().authenticated()
                 )
                 .addFilterBefore(authTokenFilter, UsernamePasswordAuthenticationFilter.class);

@@ -1,0 +1,72 @@
+### Login como ADMIN (guarda o token na variável "token"). Requer um usuário ADMIN já existente no banco
+@admin_email = admin@example.com
+@admin_password = change-me-123
+POST {{host}}/auth/login
+Content-Type: application/json
+
+{
+  "email": "{{admin_email}}",
+  "password": "{{admin_password}}"
+}
+
+> {%
+    client.global.set("token", response.body.token);
+%}
+
+### Criar ANALYST -> 201
+POST {{host}}/admin/users
+Content-Type: application/json
+Authorization: Bearer {{token}}
+
+{
+  "email": "analyst@example.com",
+  "password": "password123",
+  "role": "ANALYST"
+}
+
+### Criar ADMIN -> 201
+POST {{host}}/admin/users
+Content-Type: application/json
+Authorization: Bearer {{token}}
+
+{
+  "email": "admin2@example.com",
+  "password": "password123",
+  "role": "ADMIN"
+}
+
+### Criar com role CLIENT -> 400
+POST {{host}}/admin/users
+Content-Type: application/json
+Authorization: Bearer {{token}}
+
+{
+  "email": "client@example.com",
+  "password": "password123",
+  "role": "CLIENT"
+}
+
+### Sem token -> 401
+POST {{host}}/admin/users
+Content-Type: application/json
+
+{
+  "email": "x@example.com",
+  "password": "password123",
+  "role": "ANALYST"
+}
+
+
+
+### Login (guarda o token na variável "token") -- com analista
+POST {{host}}/auth/login
+Content-Type: application/json
+
+{
+  "email": "analyst@example.com",
+  "password": "password123"
+}
+
+> {%
+    client.global.set("token", response.body.token);
+%}

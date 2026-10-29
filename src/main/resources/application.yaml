@@ -9,6 +9,11 @@ spring:
       skip:
         in-tests: false
 
+  flyway:
+    placeholders:
+      admin_email: ${ADMIN_EMAIL}
+      admin_password: ${ADMIN_PASSWORD}
+
 jwt:
   secret: ${JWT_SECRET}
   expiration: ${JWT_EXPIRATION:3600}

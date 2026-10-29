@@ -4,18 +4,15 @@ import dev.guilhermeluan.desafiobackend.desafiobackend_sea.auth.jwt.JwtUtils;
 import dev.guilhermeluan.desafiobackend.desafiobackend_sea.users.AuthenticatedUser;
 import dev.guilhermeluan.desafiobackend.desafiobackend_sea.users.Role;
 import dev.guilhermeluan.desafiobackend.desafiobackend_sea.users.User;
-import dev.guilhermeluan.desafiobackend.desafiobackend_sea.users.UserRepository;
+import dev.guilhermeluan.desafiobackend.desafiobackend_sea.users.UserService;
 import org.junit.jupiter.api.Test;
 import org.junit.jupiter.api.extension.ExtendWith;
-import org.mockito.ArgumentCaptor;
 import org.mockito.InjectMocks;
 import org.mockito.Mock;
 import org.mockito.junit.jupiter.MockitoExtension;
-import org.springframework.dao.DataIntegrityViolationException;
 import org.springframework.security.authentication.AuthenticationManager;
 import org.springframework.security.authentication.BadCredentialsException;
 import org.springframework.security.authentication.UsernamePasswordAuthenticationToken;
-import org.springframework.security.crypto.password.PasswordEncoder;
 
 import static org.junit.jupiter.api.Assertions.assertEquals;
 import static org.junit.jupiter.api.Assertions.assertThrows;
@@ -30,53 +27,22 @@ class AuthServiceTest {
     @Mock
     private AuthenticationManager authenticationManager;
     @Mock
-    private UserRepository userRepository;
-    @Mock
-    private PasswordEncoder encoder;
-    @Mock
     private JwtUtils jwtUtils;
+    @Mock
+    private UserService userService;
 
     @InjectMocks
     private AuthService authService;
 
     @Test
-    void registerSavesClientWithEncodedPassword() {
-        when(userRepository.existsByEmail("a@example.com")).thenReturn(false);
-        when(encoder.encode("password123")).thenReturn("hashed");
-        when(userRepository.saveAndFlush(any(User.class))).thenAnswer(i -> {
-            User u = i.getArgument(0);
-            u.setId(1L);
-            return u;
-        });
+    void registerCreatesUserWithClientRole() {
+        User created = new User(1L, "a@example.com", "hashed", Role.CLIENT);
+        when(userService.createUser("a@example.com", "password123", Role.CLIENT)).thenReturn(created);
 
         User response = authService.register("a@example.com", "password123");
 
-        ArgumentCaptor<User> saved = ArgumentCaptor.forClass(User.class);
-        verify(userRepository).saveAndFlush(saved.capture());
-        assertEquals("hashed", saved.getValue().getPasswordHash());
-        assertEquals(Role.CLIENT, saved.getValue().getRole());
-        assertEquals(1L, response.getId());
-        assertEquals("a@example.com", response.getEmail());
-    }
-
-    @Test
-    void registerWithExistingEmailThrows() {
-        when(userRepository.existsByEmail("a@example.com")).thenReturn(true);
-
-        assertThrows(EmailAlreadyRegisteredException.class,
-                () -> authService.register("a@example.com", "password123"));
-
-        verify(userRepository, never()).saveAndFlush(any());
-    }
-
-    @Test
-    void registerThrowsWhenDatabaseRejectsDuplicateEmail() {
-        when(userRepository.existsByEmail("a@example.com")).thenReturn(false);
-        when(encoder.encode("password123")).thenReturn("hashed");
-        when(userRepository.saveAndFlush(any(User.class))).thenThrow(new DataIntegrityViolationException("duplicate"));
-
-        assertThrows(EmailAlreadyRegisteredException.class,
-                () -> authService.register("a@example.com", "password123"));
+        assertEquals(created, response);
+        verify(userService).createUser("a@example.com", "password123", Role.CLIENT);
     }
 
     @Test
