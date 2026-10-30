@@ -1,6 +1,7 @@
 package dev.guilhermeluan.desafiobackend.desafiobackend_sea.users;
 
 import org.springframework.dao.DataIntegrityViolationException;
+import org.springframework.security.authentication.BadCredentialsException;
 import org.springframework.security.crypto.password.PasswordEncoder;
 import org.springframework.stereotype.Service;
 
@@ -9,7 +10,6 @@ import java.util.Set;
 
 @Service
 public class UserService {
-
     private final UserRepository userRepository;
     private final PasswordEncoder encoder;
 
@@ -65,6 +65,15 @@ public class UserService {
 
     private User findByIdOrThrowUserNotFoundException(long id) {
         return userRepository.findById(id).orElseThrow(() -> new UserNotFoundException(id));
+    }
+
+    public Long findIdByEmail(String email) {
+        User user = userRepository.findByEmail(email);
+        if (user == null) {
+            // token válido de um usuário que não existe mais
+            throw new BadCredentialsException("User not found for the authenticated email");
+        }
+        return user.getId();
     }
 
     private static void validateCoverage(Role role, Set<String> ufs) {

@@ -1,0 +1,144 @@
+### Registrar um CLIENT -> 201 (se o email já existir, retorna 409; pode ignorar)
+POST {{host}}/auth/register
+Content-Type: application/json
+
+{
+  "email": "client@example.com",
+  "password": "password123"
+}
+
+### Login como CLIENT (guarda o token em "client_token")
+POST {{host}}/auth/login
+Content-Type: application/json
+
+{
+  "email": "client@example.com",
+  "password": "password123"
+}
+
+> {%
+    client.global.set("client_token", response.body.token);
+%}
+
+### Criar rascunho (guarda o id em "solicitation_id") -> 201
+POST {{host}}/solicitations
+Authorization: Bearer {{client_token}}
+
+> {%
+    client.global.set("solicitation_id", response.body.id);
+%}
+
+### Submit com o rascunho vazio -> 400 com missingSteps [1,2,3] e fieldErrors
+POST {{host}}/solicitations/{{solicitation_id}}/submit
+Authorization: Bearer {{client_token}}
+
+### Etapa 2 antes da etapa 1 -> 409
+PUT {{host}}/solicitations/{{solicitation_id}}/steps/2
+Content-Type: application/json
+Authorization: Bearer {{client_token}}
+
+{
+  "cep": "22785-275",
+  "number": "25997",
+  "complement": "CT George Helal"
+}
+
+### Etapa 1: dados básicos -> 200, currentStep 2
+PUT {{host}}/solicitations/{{solicitation_id}}/steps/1
+Content-Type: application/json
+Authorization: Bearer {{client_token}}
+
+{
+  "serviceType": "INSTALLATION",
+  "title": "Instalar ar-condicionado",
+  "description": "Instalação de um split na sala de estar do apartamento"
+}
+
+### Etapa 1 inválida (título curto) -> 400
+PUT {{host}}/solicitations/{{solicitation_id}}/steps/1
+Content-Type: application/json
+Authorization: Bearer {{client_token}}
+
+{
+  "serviceType": "INSTALLATION",
+  "title": "ab",
+  "description": "curta"
+}
+
+### Etapa 2 com CEP inexistente -> 400, currentStep continua 2
+PUT {{host}}/solicitations/{{solicitation_id}}/steps/2
+Content-Type: application/json
+Authorization: Bearer {{client_token}}
+
+{
+  "cep": "99999999",
+  "number": "10"
+}
+
+### Etapa 2: endereço (rua, bairro, cidade e UF vêm do ViaCEP) -> 200, currentStep 3
+PUT {{host}}/solicitations/{{solicitation_id}}/steps/2
+Content-Type: application/json
+Authorization: Bearer {{client_token}}
+
+{
+  "cep": "22785-275",
+  "number": "25997",
+  "complement": "CT George Helal"
+}
+
+### Etapa 3: prioridade HIGH com valor abaixo de 100 -> 400
+PUT {{host}}/solicitations/{{solicitation_id}}/steps/3
+Content-Type: application/json
+Authorization: Bearer {{client_token}}
+
+{
+  "priority": "HIGH",
+  "estimatedValue": 99.99,
+  "termsAccepted": true
+}
+
+### Etapa 3: confirmação -> 200
+PUT {{host}}/solicitations/{{solicitation_id}}/steps/3
+Content-Type: application/json
+Authorization: Bearer {{client_token}}
+
+{
+  "priority": "MEDIUM",
+  "preferredDate": "2030-01-15",
+  "estimatedValue": 250.00,
+  "termsAccepted": true
+}
+
+### Consultar a solicitação -> 200
+GET {{host}}/solicitations/{{solicitation_id}}
+Authorization: Bearer {{client_token}}
+
+### Solicitação inexistente -> 404
+GET {{host}}/solicitations/999999
+Authorization: Bearer {{client_token}}
+
+### Submit -> 200, status SUBMITTED
+POST {{host}}/solicitations/{{solicitation_id}}/submit
+Authorization: Bearer {{client_token}}
+
+### Editar depois do submit -> 409
+PUT {{host}}/solicitations/{{solicitation_id}}/steps/1
+Content-Type: application/json
+Authorization: Bearer {{client_token}}
+
+{
+  "serviceType": "INSPECTION",
+  "title": "Outro título",
+  "description": "Descrição nova com mais de vinte caracteres"
+}
+
+### Submit de novo -> 409
+POST {{host}}/solicitations/{{solicitation_id}}/submit
+Authorization: Bearer {{client_token}}
+
+### Sem token -> 401
+POST {{host}}/solicitations
+
+### ADMIN não acessa as rotas do cliente -> 403 (rode o login do admin em users.http antes)
+POST {{host}}/solicitations
+Authorization: Bearer {{token}}
