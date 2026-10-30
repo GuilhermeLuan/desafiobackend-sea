@@ -18,3 +18,7 @@ jwt:
   secret: ${JWT_SECRET}
   expiration: ${JWT_EXPIRATION:3600}
   issuer: ${JWT_ISSUER:desafiobackend-sea}
+
+viacep:
+  base-url: ${VIACEP_BASE_URL:https://viacep.com.br/ws}
+  timeout: ${VIACEP_TIMEOUT:3s}
