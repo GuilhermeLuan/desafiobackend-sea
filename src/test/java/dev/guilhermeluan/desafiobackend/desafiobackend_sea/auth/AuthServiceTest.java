@@ -1,7 +1,7 @@
 package dev.guilhermeluan.desafiobackend.desafiobackend_sea.auth;
 
 import dev.guilhermeluan.desafiobackend.desafiobackend_sea.auth.jwt.JwtUtils;
-import dev.guilhermeluan.desafiobackend.desafiobackend_sea.users.AuthenticatedUser;
+import dev.guilhermeluan.desafiobackend.desafiobackend_sea.auth.AuthenticatedUser;
 import dev.guilhermeluan.desafiobackend.desafiobackend_sea.users.Role;
 import dev.guilhermeluan.desafiobackend.desafiobackend_sea.users.User;
 import dev.guilhermeluan.desafiobackend.desafiobackend_sea.users.UserService;

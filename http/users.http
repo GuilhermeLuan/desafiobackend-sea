@@ -13,7 +13,7 @@ Content-Type: application/json
     client.global.set("token", response.body.token);
 %}
 
-### Criar ANALYST -> 201
+### Criar ANALYST com UFs de cobertura (guarda o id em "analyst_id") -> 201
 POST {{host}}/admin/users
 Content-Type: application/json
 Authorization: Bearer {{token}}
@@ -21,10 +21,26 @@ Authorization: Bearer {{token}}
 {
   "email": "analyst@example.com",
   "password": "password123",
+  "role": "ANALYST",
+  "coverageUfs": ["SP", "DF"]
+}
+
+> {%
+    client.global.set("analyst_id", response.body.id);
+%}
+
+### Criar ANALYST sem UFs -> 400
+POST {{host}}/admin/users
+Content-Type: application/json
+Authorization: Bearer {{token}}
+
+{
+  "email": "analyst-sem-uf@example.com",
+  "password": "password123",
   "role": "ANALYST"
 }
 
-### Criar ADMIN -> 201
+### Criar ADMIN (guarda o id em "admin2_id") -> 201
 POST {{host}}/admin/users
 Content-Type: application/json
 Authorization: Bearer {{token}}
@@ -33,6 +49,22 @@ Authorization: Bearer {{token}}
   "email": "admin2@example.com",
   "password": "password123",
   "role": "ADMIN"
+}
+
+> {%
+    client.global.set("admin2_id", response.body.id);
+%}
+
+### Criar ADMIN com UFs -> 400
+POST {{host}}/admin/users
+Content-Type: application/json
+Authorization: Bearer {{token}}
+
+{
+  "email": "admin3@example.com",
+  "password": "password123",
+  "role": "ADMIN",
+  "coverageUfs": ["SP"]
 }
 
 ### Criar com role CLIENT -> 400
@@ -54,6 +86,66 @@ Content-Type: application/json
   "email": "x@example.com",
   "password": "password123",
   "role": "ANALYST"
+}
+
+### Atualizar cobertura do ANALYST (substitui a lista inteira; requer token ADMIN) -> 200
+PUT {{host}}/admin/users/{{analyst_id}}/coverage
+Content-Type: application/json
+Authorization: Bearer {{token}}
+
+{
+  "coverageUfs": ["RJ", "MG"]
+}
+
+### Atualizar cobertura com lista vazia -> 400
+PUT {{host}}/admin/users/{{analyst_id}}/coverage
+Content-Type: application/json
+Authorization: Bearer {{token}}
+
+{
+  "coverageUfs": []
+}
+
+### Atualizar cobertura sem o campo -> 400
+PUT {{host}}/admin/users/{{analyst_id}}/coverage
+Content-Type: application/json
+Authorization: Bearer {{token}}
+
+{}
+
+### Atualizar cobertura com UF inválida -> 400
+PUT {{host}}/admin/users/{{analyst_id}}/coverage
+Content-Type: application/json
+Authorization: Bearer {{token}}
+
+{
+  "coverageUfs": ["XX"]
+}
+
+### Atualizar cobertura de um ADMIN -> 400
+PUT {{host}}/admin/users/{{admin2_id}}/coverage
+Content-Type: application/json
+Authorization: Bearer {{token}}
+
+{
+  "coverageUfs": ["SP"]
+}
+
+### Atualizar cobertura de usuário inexistente -> 404
+PUT {{host}}/admin/users/999999/coverage
+Content-Type: application/json
+Authorization: Bearer {{token}}
+
+{
+  "coverageUfs": ["SP"]
+}
+
+### Atualizar cobertura sem token -> 401
+PUT {{host}}/admin/users/{{analyst_id}}/coverage
+Content-Type: application/json
+
+{
+  "coverageUfs": ["SP"]
 }
 
 

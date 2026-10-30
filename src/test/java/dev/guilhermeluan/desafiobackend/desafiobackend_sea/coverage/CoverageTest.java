@@ -1,4 +1,4 @@
-package dev.guilhermeluan.desafiobackend.desafiobackend_sea.users;
+package dev.guilhermeluan.desafiobackend.desafiobackend_sea.coverage;
 
 import org.junit.jupiter.api.Test;
 

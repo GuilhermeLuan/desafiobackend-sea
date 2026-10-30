@@ -38,21 +38,12 @@ public class UserService {
     }
 
     public User createPrivilegedUser(String email, String password, Role role, Set<String> coverageUfs) {
-        Set<String> ufs = coverageUfs == null ? Set.of() : coverageUfs;
-
-        switch (role) {
-            case ANALYST -> {
-                if (ufs.isEmpty()) {
-                    throw new InvalidCoverageException("Analyst users require at least one coverage UF");
-                }
-            }
-            case ADMIN -> {
-                if (!ufs.isEmpty()) {
-                    throw new InvalidCoverageException("Admin users must not have coverage UFs");
-                }
-            }
-            default -> throw new InvalidRoleException(role);
+        if (role != Role.ANALYST && role != Role.ADMIN) {
+            throw new InvalidRoleException(role);
         }
+
+        Set<String> ufs = orEmpty(coverageUfs);
+        validateCoverage(role, ufs);
 
         return createUser(email, password, role, ufs);
     }
@@ -61,5 +52,38 @@ public class UserService {
         if (userRepository.existsByEmail(email)) {
             throw new EmailAlreadyRegisteredException(email);
         }
+    }
+
+    public User updateCoverage(long id, Set<String> coverageUfs) {
+        User user = findByIdOrThrowUserNotFoundException(id);
+        Set<String> ufs = orEmpty(coverageUfs);
+        validateCoverage(user.getRole(), ufs);
+
+        user.setCoverageUfs(new HashSet<>(ufs));
+        return userRepository.saveAndFlush(user);
+    }
+
+    private User findByIdOrThrowUserNotFoundException(long id){
+        return userRepository.findById(id).orElseThrow(() -> new UserNotFoundException(id));
+    }
+
+    private static void validateCoverage(Role role, Set<String> ufs) {
+        switch (role) {
+            case ANALYST -> {
+                if (ufs.isEmpty()) {
+                    throw new InvalidCoverageAssignmentException("Analyst users require at least one coverage UF");
+                }
+            }
+            case ADMIN -> {
+                if (!ufs.isEmpty()) {
+                    throw new InvalidCoverageAssignmentException("Admin users must not have coverage UFs");
+                }
+            }
+            case CLIENT -> throw new InvalidCoverageAssignmentException("Client users do not have coverage UFs");
+        }
+    }
+
+    private static Set<String> orEmpty(Set<String> ufs) {
+        return ufs == null ? Set.of() : ufs;
     }
 }

@@ -1,5 +1,7 @@
-package dev.guilhermeluan.desafiobackend.desafiobackend_sea.users;
+package dev.guilhermeluan.desafiobackend.desafiobackend_sea.auth;
 
+import dev.guilhermeluan.desafiobackend.desafiobackend_sea.users.User;
+import dev.guilhermeluan.desafiobackend.desafiobackend_sea.users.UserRepository;
 import org.springframework.security.core.userdetails.UserDetails;
 import org.springframework.security.core.userdetails.UserDetailsService;
 import org.springframework.security.core.userdetails.UsernameNotFoundException;

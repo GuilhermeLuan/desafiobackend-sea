@@ -1,5 +1,7 @@
-package dev.guilhermeluan.desafiobackend.desafiobackend_sea.users;
+package dev.guilhermeluan.desafiobackend.desafiobackend_sea.auth;
 
+import dev.guilhermeluan.desafiobackend.desafiobackend_sea.users.Role;
+import dev.guilhermeluan.desafiobackend.desafiobackend_sea.users.User;
 import org.springframework.security.core.GrantedAuthority;
 import org.springframework.security.core.authority.SimpleGrantedAuthority;
 import org.springframework.security.core.userdetails.UserDetails;

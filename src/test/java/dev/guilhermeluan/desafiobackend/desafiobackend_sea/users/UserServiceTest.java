@@ -10,6 +10,7 @@ import org.springframework.dao.DataIntegrityViolationException;
 import org.springframework.security.crypto.password.PasswordEncoder;
 
 import java.util.HashSet;
+import java.util.Optional;
 import java.util.Set;
 
 import static org.junit.jupiter.api.Assertions.assertEquals;
@@ -99,9 +100,9 @@ class UserServiceTest {
 
     @Test
     void createAnalystWithoutUfsIsRejected() {
-        assertThrows(InvalidCoverageException.class,
+        assertThrows(InvalidCoverageAssignmentException.class,
                 () -> userService.createPrivilegedUser("a@example.com", "password123", Role.ANALYST, Set.of()));
-        assertThrows(InvalidCoverageException.class,
+        assertThrows(InvalidCoverageAssignmentException.class,
                 () -> userService.createPrivilegedUser("a@example.com", "password123", Role.ANALYST, null));
 
         verify(userRepository, never()).saveAndFlush(any());
@@ -120,8 +121,56 @@ class UserServiceTest {
 
     @Test
     void createAdminUserRejectsUfs() {
-        assertThrows(InvalidCoverageException.class,
+        assertThrows(InvalidCoverageAssignmentException.class,
                 () -> userService.createPrivilegedUser("a@example.com", "password123", Role.ADMIN, Set.of("DF", "SP")));
+
+        verify(userRepository, never()).saveAndFlush(any());
+    }
+
+    @Test
+    void updateCoverageReplacesTheAnalystUfs() {
+        User analyst = new User(1L, "a@example.com", "hashed", Role.ANALYST);
+        analyst.setCoverageUfs(new HashSet<>(Set.of("SP")));
+        when(userRepository.findById(1L)).thenReturn(Optional.of(analyst));
+        when(userRepository.saveAndFlush(any(User.class))).thenAnswer(i -> i.getArgument(0));
+
+        User updated = userService.updateCoverage(1L, Set.of("RJ", "DF"));
+
+        assertEquals(Set.of("RJ", "DF"), updated.getCoverageUfs());
+        verify(userRepository).saveAndFlush(analyst);
+    }
+
+    @Test
+    void updateCoverageRejectsEmptyOrNullUfsForAnalyst() {
+        User analyst = new User(1L, "a@example.com", "hashed", Role.ANALYST);
+        analyst.setCoverageUfs(new HashSet<>(Set.of("SP")));
+        when(userRepository.findById(1L)).thenReturn(Optional.of(analyst));
+
+        assertThrows(InvalidCoverageAssignmentException.class, () -> userService.updateCoverage(1L, Set.of()));
+        assertThrows(InvalidCoverageAssignmentException.class, () -> userService.updateCoverage(1L, null));
+
+        assertEquals(Set.of("SP"), analyst.getCoverageUfs());
+        verify(userRepository, never()).saveAndFlush(any());
+    }
+
+    @Test
+    void updateCoverageRejectsAdminAndClient() {
+        User admin = new User(1L, "a@example.com", "hashed", Role.ADMIN);
+        User client = new User(2L, "c@example.com", "hashed", Role.CLIENT);
+        when(userRepository.findById(1L)).thenReturn(Optional.of(admin));
+        when(userRepository.findById(2L)).thenReturn(Optional.of(client));
+
+        assertThrows(InvalidCoverageAssignmentException.class, () -> userService.updateCoverage(1L, Set.of("SP")));
+        assertThrows(InvalidCoverageAssignmentException.class, () -> userService.updateCoverage(2L, Set.of("SP")));
+
+        verify(userRepository, never()).saveAndFlush(any());
+    }
+
+    @Test
+    void updateCoverageOfUnknownUserThrows() {
+        when(userRepository.findById(99L)).thenReturn(Optional.empty());
+
+        assertThrows(UserNotFoundException.class, () -> userService.updateCoverage(99L, Set.of("SP")));
 
         verify(userRepository, never()).saveAndFlush(any());
     }

@@ -1,6 +1,5 @@
 package dev.guilhermeluan.desafiobackend.desafiobackend_sea.coverage;
 
-import dev.guilhermeluan.desafiobackend.desafiobackend_sea.users.Coverage;
 import dev.guilhermeluan.desafiobackend.desafiobackend_sea.users.Role;
 import dev.guilhermeluan.desafiobackend.desafiobackend_sea.users.UserRepository;
 import org.junit.jupiter.api.Test;

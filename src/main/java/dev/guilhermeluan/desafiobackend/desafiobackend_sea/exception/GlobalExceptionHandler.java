@@ -1,8 +1,10 @@
 package dev.guilhermeluan.desafiobackend.desafiobackend_sea.exception;
 
+import dev.guilhermeluan.desafiobackend.desafiobackend_sea.coverage.CoverageAccessDeniedException;
 import dev.guilhermeluan.desafiobackend.desafiobackend_sea.users.EmailAlreadyRegisteredException;
-import dev.guilhermeluan.desafiobackend.desafiobackend_sea.users.InvalidCoverageException;
+import dev.guilhermeluan.desafiobackend.desafiobackend_sea.users.InvalidCoverageAssignmentException;
 import dev.guilhermeluan.desafiobackend.desafiobackend_sea.users.InvalidRoleException;
+import dev.guilhermeluan.desafiobackend.desafiobackend_sea.users.UserNotFoundException;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.ProblemDetail;
 import org.springframework.security.authentication.BadCredentialsException;
@@ -29,8 +31,18 @@ public class GlobalExceptionHandler extends ResponseEntityExceptionHandler {
         return ProblemDetail.forStatusAndDetail(HttpStatus.UNAUTHORIZED, "Invalid email or password");
     }
 
-    @ExceptionHandler(InvalidCoverageException.class)
-    public ProblemDetail handleInvalidCoverage(InvalidCoverageException e) {
+    @ExceptionHandler(InvalidCoverageAssignmentException.class)
+    public ProblemDetail handleInvalidCoverage(InvalidCoverageAssignmentException e) {
         return ProblemDetail.forStatusAndDetail(HttpStatus.BAD_REQUEST, e.getMessage());
+    }
+
+    @ExceptionHandler(CoverageAccessDeniedException.class)
+    public ProblemDetail handleCoverageAccessDenied(CoverageAccessDeniedException e) {
+        return ProblemDetail.forStatusAndDetail(HttpStatus.NOT_FOUND, "Resource not found");
+    }
+
+    @ExceptionHandler(UserNotFoundException.class)
+    public ProblemDetail handleUserNotFound(UserNotFoundException e) {
+        return ProblemDetail.forStatusAndDetail(HttpStatus.NOT_FOUND, "User not found");
     }
 }
