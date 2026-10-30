@@ -3,12 +3,11 @@ package dev.guilhermeluan.desafiobackend.desafiobackend_sea.solicitation;
 import dev.guilhermeluan.desafiobackend.desafiobackend_sea.solicitation.dtos.AddressRequest;
 import dev.guilhermeluan.desafiobackend.desafiobackend_sea.solicitation.dtos.BasicDataRequest;
 import dev.guilhermeluan.desafiobackend.desafiobackend_sea.solicitation.dtos.ConfirmationRequest;
-import dev.guilhermeluan.desafiobackend.desafiobackend_sea.users.User;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 
-import java.util.Objects;
-import java.util.Optional;
+import java.util.*;
+
 
 @Service
 public class SolicitationService {
@@ -58,6 +57,9 @@ public class SolicitationService {
         return draft;
     }
 
+    private static boolean isBlank(String value) {
+        return value == null || value.isBlank();
+    }
 
     private Solicitation findOwned(Long ownerId, Long draftId) {
 
@@ -67,6 +69,54 @@ public class SolicitationService {
         }
         return draft;
 
+    }
+
+    @Transactional
+    public Solicitation submit(Long ownerId, Long id) {
+        Solicitation draft = findOwned(ownerId, id);
+
+        Map<Integer, List<String>> missingByStep = new LinkedHashMap<>();
+        missingByStep.put(1, missingInStep1(draft));
+        missingByStep.put(2, missingInStep2(draft));
+        missingByStep.put(3, missingInStep3(draft));
+
+        List<Integer> missingSteps = new ArrayList<>();
+        List<String> missingFields = new ArrayList<>();
+        missingByStep.forEach((step, fields) -> {
+            if (!fields.isEmpty()) {
+                missingSteps.add(step);
+                missingFields.addAll(fields);
+            }
+        });
+
+        if (!missingSteps.isEmpty()) {
+            throw new IncompleteSolicitationException(missingSteps, missingFields);
+        }
+        draft.submit();
+        return draft;
+    }
+
+    private List<String> missingInStep1(Solicitation s) {
+        List<String> missing = new ArrayList<>();
+        if (s.getServiceType() == null) missing.add("serviceType");
+        if (isBlank(s.getTitle())) missing.add("title");
+        if (isBlank(s.getDescription())) missing.add("description");
+        return missing;
+    }
+
+    private List<String> missingInStep2(Solicitation s) {
+        List<String> missing = new ArrayList<>();
+        if (isBlank(s.getCep())) missing.add("cep");
+        if (isBlank(s.getNumber())) missing.add("number");
+        return missing;
+    }
+
+    private List<String> missingInStep3(Solicitation s) {
+        List<String> missing = new ArrayList<>();
+        if (s.getPriority() == null) missing.add("priority");
+        if (s.getEstimatedValue() == null) missing.add("estimatedValue");
+        if (!s.isTermsAccepted()) missing.add("termsAccepted");
+        return missing;
     }
 }
 

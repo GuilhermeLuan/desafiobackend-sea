@@ -24,7 +24,7 @@ public class UserService {
 
     private User createUser(String email, String password, Role role, Set<String> coverageUfs) {
         throwIfEmailAlreadyRegistered(email);
-        
+
         User user = new User(null, email, encoder.encode(password), role);
         user.setCoverageUfs(new HashSet<>(coverageUfs));
 
@@ -63,7 +63,7 @@ public class UserService {
         return userRepository.saveAndFlush(user);
     }
 
-    private User findByIdOrThrowUserNotFoundException(long id){
+    private User findByIdOrThrowUserNotFoundException(long id) {
         return userRepository.findById(id).orElseThrow(() -> new UserNotFoundException(id));
     }
 

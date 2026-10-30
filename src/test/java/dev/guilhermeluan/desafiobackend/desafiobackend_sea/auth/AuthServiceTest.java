@@ -1,7 +1,6 @@
 package dev.guilhermeluan.desafiobackend.desafiobackend_sea.auth;
 
 import dev.guilhermeluan.desafiobackend.desafiobackend_sea.auth.jwt.JwtUtils;
-import dev.guilhermeluan.desafiobackend.desafiobackend_sea.auth.AuthenticatedUser;
 import dev.guilhermeluan.desafiobackend.desafiobackend_sea.users.Role;
 import dev.guilhermeluan.desafiobackend.desafiobackend_sea.users.User;
 import dev.guilhermeluan.desafiobackend.desafiobackend_sea.users.UserService;
@@ -17,9 +16,7 @@ import org.springframework.security.authentication.UsernamePasswordAuthenticatio
 import static org.junit.jupiter.api.Assertions.assertEquals;
 import static org.junit.jupiter.api.Assertions.assertThrows;
 import static org.mockito.ArgumentMatchers.any;
-import static org.mockito.Mockito.never;
-import static org.mockito.Mockito.verify;
-import static org.mockito.Mockito.when;
+import static org.mockito.Mockito.*;
 
 @ExtendWith(MockitoExtension.class)
 class AuthServiceTest {

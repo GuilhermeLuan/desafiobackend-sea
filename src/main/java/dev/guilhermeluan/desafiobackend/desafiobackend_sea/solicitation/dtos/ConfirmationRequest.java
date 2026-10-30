@@ -1,11 +1,7 @@
 package dev.guilhermeluan.desafiobackend.desafiobackend_sea.solicitation.dtos;
 
 import dev.guilhermeluan.desafiobackend.desafiobackend_sea.solicitation.Priority;
-import jakarta.validation.constraints.AssertTrue;
-import jakarta.validation.constraints.Digits;
-import jakarta.validation.constraints.FutureOrPresent;
-import jakarta.validation.constraints.NotNull;
-import jakarta.validation.constraints.PositiveOrZero;
+import jakarta.validation.constraints.*;
 
 import java.math.BigDecimal;
 import java.time.LocalDate;

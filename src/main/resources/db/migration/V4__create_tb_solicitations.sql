@@ -1,8 +1,9 @@
-CREATE TABLE tb_solicitations (
-    id               BIGSERIAL     PRIMARY KEY,
-    owner_id         BIGINT        NOT NULL,
-    status           VARCHAR(20)   NOT NULL,
-    current_step     SMALLINT      NOT NULL DEFAULT 1,
+CREATE TABLE tb_solicitations
+(
+    id             BIGSERIAL PRIMARY KEY,
+    owner_id       BIGINT      NOT NULL,
+    status         VARCHAR(20) NOT NULL,
+    current_step   SMALLINT    NOT NULL DEFAULT 1,
 
     -- etapa 1: dados básicos
     service_type     VARCHAR(20),
@@ -22,14 +23,14 @@ CREATE TABLE tb_solicitations (
     priority         VARCHAR(10),
     preferred_date   DATE,
     estimated_value  NUMERIC(12, 2),
-    terms_accepted   BOOLEAN       NOT NULL DEFAULT FALSE,
+    terms_accepted BOOLEAN     NOT NULL DEFAULT FALSE,
 
     -- decisão do analista
     decided_by       BIGINT,
     decision_comment VARCHAR(1000),
 
-    created_at       TIMESTAMPTZ   NOT NULL DEFAULT now(),
-    updated_at       TIMESTAMPTZ   NOT NULL DEFAULT now(),
+    created_at     TIMESTAMPTZ NOT NULL DEFAULT now(),
+    updated_at     TIMESTAMPTZ NOT NULL DEFAULT now(),
     submitted_at     TIMESTAMPTZ,
 
     CONSTRAINT fk_tb_solicitations_owner FOREIGN KEY (owner_id) REFERENCES tb_users (id),
@@ -41,10 +42,10 @@ CREATE TABLE tb_solicitations (
     CONSTRAINT ck_tb_solicitations_priority CHECK (priority IN ('LOW', 'MEDIUM', 'HIGH')),
     CONSTRAINT ck_tb_solicitations_estimated_value CHECK (estimated_value >= 0),
     CONSTRAINT ck_tb_solicitations_state CHECK (state IN (
-        'AC', 'AL', 'AP', 'AM', 'BA', 'CE', 'DF', 'ES', 'GO',
-        'MA', 'MT', 'MS', 'MG', 'PA', 'PB', 'PR', 'PE', 'PI',
-        'RJ', 'RN', 'RS', 'RO', 'RR', 'SC', 'SP', 'SE', 'TO'
-    )),
+                                                          'AC', 'AL', 'AP', 'AM', 'BA', 'CE', 'DF', 'ES', 'GO',
+                                                          'MA', 'MT', 'MS', 'MG', 'PA', 'PB', 'PR', 'PE', 'PI',
+                                                          'RJ', 'RN', 'RS', 'RO', 'RR', 'SC', 'SP', 'SE', 'TO'
+        )),
     -- quem decidiu e o comentário andam juntos: ou os dois existem, ou nenhum
     CONSTRAINT ck_tb_solicitations_decision CHECK ((decided_by IS NULL) = (decision_comment IS NULL))
 );

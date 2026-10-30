@@ -1,12 +1,8 @@
 package dev.guilhermeluan.desafiobackend.desafiobackend_sea.auth.jwt;
 
-import io.jsonwebtoken.Claims;
-import io.jsonwebtoken.ExpiredJwtException;
-import io.jsonwebtoken.JwtException;
-import io.jsonwebtoken.JwtParser;
-import io.jsonwebtoken.Jwts;
-import io.jsonwebtoken.security.Keys;
 import dev.guilhermeluan.desafiobackend.desafiobackend_sea.users.Role;
+import io.jsonwebtoken.*;
+import io.jsonwebtoken.security.Keys;
 import jakarta.annotation.PostConstruct;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.beans.factory.annotation.Value;
@@ -32,12 +28,12 @@ public class JwtUtils {
     private JwtParser parser;
 
     @PostConstruct
-    public void init(){
+    public void init() {
         this.key = Keys.hmacShaKeyFor(jwtSecret.getBytes(StandardCharsets.UTF_8));
         this.parser = Jwts.parser().verifyWith(key).requireIssuer(jwtIssuer).build();
     }
 
-    public String generateToken(String username, Role role){
+    public String generateToken(String username, Role role) {
         if (username == null || username.isBlank()) {
             throw new IllegalArgumentException("username must not be null or blank");
         }
@@ -54,15 +50,15 @@ public class JwtUtils {
                 .compact();
     }
 
-    public String getUserFromToken(String token){
+    public String getUserFromToken(String token) {
         return getUserFromClaims(getClaims(token));
     }
 
-    public Role getRoleFromToken(String token){
+    public Role getRoleFromToken(String token) {
         return getRoleFromClaims(getClaims(token));
     }
 
-    public String getUserFromClaims(Claims claims){
+    public String getUserFromClaims(Claims claims) {
         String subject = claims.getSubject();
         if (subject == null || subject.isBlank()) {
             throw new JwtException("JWT token has no subject");
@@ -70,7 +66,7 @@ public class JwtUtils {
         return subject;
     }
 
-    public Role getRoleFromClaims(Claims claims){
+    public Role getRoleFromClaims(Claims claims) {
         String role = claims.get("role", String.class);
         if (role == null) {
             throw new JwtException("JWT token has no role claim");
@@ -82,7 +78,7 @@ public class JwtUtils {
         }
     }
 
-    public boolean validateJwtToken(String token){
+    public boolean validateJwtToken(String token) {
         try {
             getClaims(token);
             return true;
@@ -95,7 +91,7 @@ public class JwtUtils {
         return false;
     }
 
-    public Claims getClaims(String token){
+    public Claims getClaims(String token) {
         try {
             return parser.parseSignedClaims(token).getPayload();
         } catch (IllegalArgumentException e) {

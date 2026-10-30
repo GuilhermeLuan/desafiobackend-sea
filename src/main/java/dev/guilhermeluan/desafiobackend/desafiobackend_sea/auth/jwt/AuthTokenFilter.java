@@ -35,7 +35,7 @@ public class AuthTokenFilter extends OncePerRequestFilter {
         try {
             String jwt = parseJwt(request);
 
-            if(jwt != null) {
+            if (jwt != null) {
 
                 Claims claims = jwtUtils.getClaims(jwt);
                 String email = jwtUtils.getUserFromClaims(claims);
@@ -60,7 +60,7 @@ public class AuthTokenFilter extends OncePerRequestFilter {
     private String parseJwt(HttpServletRequest request) {
         String headerAuth = request.getHeader("Authorization");
 
-        if(headerAuth != null && headerAuth.startsWith(BEARER_)){
+        if (headerAuth != null && headerAuth.startsWith(BEARER_)) {
             return headerAuth.substring(BEARER_.length());
         }
 

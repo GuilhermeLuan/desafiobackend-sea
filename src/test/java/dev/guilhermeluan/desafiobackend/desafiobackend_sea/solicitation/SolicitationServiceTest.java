@@ -13,15 +13,13 @@ import org.springframework.test.util.ReflectionTestUtils;
 
 import java.math.BigDecimal;
 import java.time.LocalDate;
+import java.util.List;
 import java.util.Optional;
+import java.util.Set;
 
-import static org.junit.jupiter.api.Assertions.assertEquals;
-import static org.junit.jupiter.api.Assertions.assertNull;
-import static org.junit.jupiter.api.Assertions.assertThrows;
+import static org.junit.jupiter.api.Assertions.*;
 import static org.mockito.ArgumentMatchers.any;
-import static org.mockito.Mockito.lenient;
-import static org.mockito.Mockito.verifyNoInteractions;
-import static org.mockito.Mockito.when;
+import static org.mockito.Mockito.*;
 
 @ExtendWith(MockitoExtension.class)
 class SolicitationServiceTest {
@@ -66,6 +64,11 @@ class SolicitationServiceTest {
     private void withStepTwoSaved() {
         withStepOneSaved();
         draft.saveAddress(new Address("22785275", "Estrada dos Bandeirantes", "Vargem Grande", "Rio de Janeiro", "RJ", "25997", null));
+    }
+
+    private void withStepThreeSaved() {
+        withStepTwoSaved();
+        draft.saveConfirmation(Priority.MEDIUM, TOMORROW, new BigDecimal("250.00"), true);
     }
 
     // createDraft
@@ -240,5 +243,110 @@ class SolicitationServiceTest {
 
         assertThrows(InvalidSolicitationStateException.class, () -> service.saveConfirmation(OWNER_ID, ID,
                 new ConfirmationRequest(Priority.LOW, TOMORROW, BigDecimal.TEN, true)));
+    }
+
+    // submit
+
+    @Test
+    void submitMovesACompleteDraftToSubmitted() {
+        withStepThreeSaved();
+
+        Solicitation result = service.submit(OWNER_ID, ID);
+
+        assertEquals(Status.SUBMITTED, result.getStatus());
+        assertNotNull(result.getSubmittedAt());
+    }
+
+    @Test
+    void submitDoesNotRequireAPreferredDate() {
+        withStepTwoSaved();
+        draft.saveConfirmation(Priority.LOW, null, BigDecimal.TEN, true);
+
+        assertEquals(Status.SUBMITTED, service.submit(OWNER_ID, ID).getStatus());
+    }
+
+    @Test
+    void submitIsDeniedToAnotherClientAndChangesNothing() {
+        withStepThreeSaved();
+
+        assertThrows(SolicitationNotFoundException.class, () -> service.submit(OTHER_CLIENT_ID, ID));
+
+        assertEquals(Status.DRAFT, draft.getStatus());
+        assertNull(draft.getSubmittedAt());
+    }
+
+    @Test
+    void submitFailsForAnIdThatDoesNotExist() {
+        when(solicitationRepository.findById(99L)).thenReturn(Optional.empty());
+
+        assertThrows(SolicitationNotFoundException.class, () -> service.submit(OWNER_ID, 99L));
+    }
+
+    @Test
+    void submitOfAnEmptyDraftListsAllThreeStepsAndTheirFields() {
+        IncompleteSolicitationException e =
+                assertThrows(IncompleteSolicitationException.class, () -> service.submit(OWNER_ID, ID));
+
+        assertEquals(List.of(1, 2, 3), e.getMissingSteps());
+        assertEquals(Set.of("serviceType", "title", "description", "cep", "number",
+                "priority", "estimatedValue", "termsAccepted"), Set.copyOf(e.getMissingFields()));
+        assertEquals(Status.DRAFT, draft.getStatus());
+    }
+
+    @Test
+    void submitWithOnlyStepOneListsStepsTwoAndThree() {
+        withStepOneSaved();
+
+        IncompleteSolicitationException e =
+                assertThrows(IncompleteSolicitationException.class, () -> service.submit(OWNER_ID, ID));
+
+        assertEquals(List.of(2, 3), e.getMissingSteps());
+        assertEquals(Set.of("cep", "number", "priority", "estimatedValue", "termsAccepted"),
+                Set.copyOf(e.getMissingFields()));
+    }
+
+    @Test
+    void submitWithOnlyStepsOneAndTwoListsStepThree() {
+        withStepTwoSaved();
+
+        IncompleteSolicitationException e =
+                assertThrows(IncompleteSolicitationException.class, () -> service.submit(OWNER_ID, ID));
+
+        assertEquals(List.of(3), e.getMissingSteps());
+        assertEquals(Set.of("priority", "estimatedValue", "termsAccepted"), Set.copyOf(e.getMissingFields()));
+        assertEquals(Status.DRAFT, draft.getStatus());
+    }
+
+    @Test
+    void submitWithoutAcceptedTermsIsIncomplete() {
+        withStepTwoSaved();
+        draft.saveConfirmation(Priority.LOW, TOMORROW, BigDecimal.TEN, false);
+
+        IncompleteSolicitationException e =
+                assertThrows(IncompleteSolicitationException.class, () -> service.submit(OWNER_ID, ID));
+
+        assertEquals(List.of(3), e.getMissingSteps());
+        assertEquals(List.of("termsAccepted"), e.getMissingFields());
+    }
+
+    @Test
+    void submitWithoutEstimatedValueIsIncomplete() {
+        withStepTwoSaved();
+        draft.saveConfirmation(Priority.LOW, TOMORROW, null, true);
+
+        IncompleteSolicitationException e =
+                assertThrows(IncompleteSolicitationException.class, () -> service.submit(OWNER_ID, ID));
+
+        assertEquals(List.of(3), e.getMissingSteps());
+        assertEquals(List.of("estimatedValue"), e.getMissingFields());
+    }
+
+    @Test
+    void submitTwiceIsRejected() {
+        withStepThreeSaved();
+        service.submit(OWNER_ID, ID);
+
+        assertThrows(InvalidSolicitationStateException.class, () -> service.submit(OWNER_ID, ID));
+        assertEquals(Status.SUBMITTED, draft.getStatus());
     }
 }

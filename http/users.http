@@ -22,7 +22,10 @@ Authorization: Bearer {{token}}
   "email": "analyst@example.com",
   "password": "password123",
   "role": "ANALYST",
-  "coverageUfs": ["SP", "DF"]
+  "coverageUfs": [
+    "SP",
+    "DF"
+  ]
 }
 
 > {%
@@ -64,7 +67,9 @@ Authorization: Bearer {{token}}
   "email": "admin3@example.com",
   "password": "password123",
   "role": "ADMIN",
-  "coverageUfs": ["SP"]
+  "coverageUfs": [
+    "SP"
+  ]
 }
 
 ### Criar com role CLIENT -> 400
@@ -94,7 +99,10 @@ Content-Type: application/json
 Authorization: Bearer {{token}}
 
 {
-  "coverageUfs": ["RJ", "MG"]
+  "coverageUfs": [
+    "RJ",
+    "MG"
+  ]
 }
 
 ### Atualizar cobertura com lista vazia -> 400
@@ -119,7 +127,9 @@ Content-Type: application/json
 Authorization: Bearer {{token}}
 
 {
-  "coverageUfs": ["XX"]
+  "coverageUfs": [
+    "XX"
+  ]
 }
 
 ### Atualizar cobertura de um ADMIN -> 400
@@ -128,7 +138,9 @@ Content-Type: application/json
 Authorization: Bearer {{token}}
 
 {
-  "coverageUfs": ["SP"]
+  "coverageUfs": [
+    "SP"
+  ]
 }
 
 ### Atualizar cobertura de usuário inexistente -> 404
@@ -137,7 +149,9 @@ Content-Type: application/json
 Authorization: Bearer {{token}}
 
 {
-  "coverageUfs": ["SP"]
+  "coverageUfs": [
+    "SP"
+  ]
 }
 
 ### Atualizar cobertura sem token -> 401
@@ -145,7 +159,9 @@ PUT {{host}}/admin/users/{{analyst_id}}/coverage
 Content-Type: application/json
 
 {
-  "coverageUfs": ["SP"]
+  "coverageUfs": [
+    "SP"
+  ]
 }
 
 

@@ -1,13 +1,6 @@
 package dev.guilhermeluan.desafiobackend.desafiobackend_sea.solicitation;
 
-import jakarta.persistence.Column;
-import jakarta.persistence.Entity;
-import jakarta.persistence.EnumType;
-import jakarta.persistence.Enumerated;
-import jakarta.persistence.GeneratedValue;
-import jakarta.persistence.GenerationType;
-import jakarta.persistence.Id;
-import jakarta.persistence.Table;
+import jakarta.persistence.*;
 import lombok.Getter;
 import org.hibernate.annotations.CreationTimestamp;
 import org.hibernate.annotations.UpdateTimestamp;
@@ -113,7 +106,6 @@ public class Solicitation {
         Objects.requireNonNull(decision, "decision must not be null");
 
 
-
         switch (decision) {
             case APPROVE:
                 this.status = Status.APPROVED;
@@ -175,7 +167,7 @@ public class Solicitation {
         }
 
         if (priority == Priority.HIGH
-                && (estimatedValue == null || estimatedValue.compareTo(HIGH_PRIORITY_MIN_VALUE) < 0)) {
+            && (estimatedValue == null || estimatedValue.compareTo(HIGH_PRIORITY_MIN_VALUE) < 0)) {
             throw new InvalidSolicitationDataException("High priority requires an estimated value of at least 100");
         }
 

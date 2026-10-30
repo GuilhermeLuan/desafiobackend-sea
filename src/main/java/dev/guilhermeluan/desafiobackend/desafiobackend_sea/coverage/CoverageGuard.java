@@ -15,11 +15,11 @@ public class CoverageGuard {
     }
 
     public Coverage coverageOf(String email, Role role) {
-        if(role == Role.CLIENT){
+        if (role == Role.CLIENT) {
             return new Coverage(Set.of(), false);
         }
 
-        if(role == Role.ADMIN) {
+        if (role == Role.ADMIN) {
             return new Coverage(Set.of(), true);
         }
 
@@ -28,7 +28,7 @@ public class CoverageGuard {
         return new Coverage(coverageUfs, false);
     }
 
-    public  void assertCovers(String email, Role role, String uf) {
+    public void assertCovers(String email, Role role, String uf) {
         Coverage coverage = coverageOf(email, role);
 
         if (!coverage.covers(uf)) {

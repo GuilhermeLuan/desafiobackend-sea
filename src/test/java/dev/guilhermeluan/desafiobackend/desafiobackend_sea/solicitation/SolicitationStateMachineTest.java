@@ -4,10 +4,7 @@ import org.junit.jupiter.api.Test;
 import org.junit.jupiter.params.ParameterizedTest;
 import org.junit.jupiter.params.provider.EnumSource;
 
-import static org.junit.jupiter.api.Assertions.assertDoesNotThrow;
-import static org.junit.jupiter.api.Assertions.assertEquals;
-import static org.junit.jupiter.api.Assertions.assertNull;
-import static org.junit.jupiter.api.Assertions.assertThrows;
+import static org.junit.jupiter.api.Assertions.*;
 
 class SolicitationStateMachineTest {
 
@@ -15,12 +12,15 @@ class SolicitationStateMachineTest {
     private static final Long ANALYST_ID = 20L;
     private static final String COMMENT = "Documentação conferida e aprovada";
 
-    /** Leva uma solicitação nova até o status pedido, usando só transições válidas. */
+    /**
+     * Leva uma solicitação nova até o status pedido, usando só transições válidas.
+     */
     private static Solicitation solicitationIn(Status status) {
         Solicitation solicitation = Solicitation.draft(OWNER_ID);
 
         switch (status) {
-            case DRAFT -> { }
+            case DRAFT -> {
+            }
             case SUBMITTED -> solicitation.submit();
             case IN_REVIEW -> {
                 solicitation.submit();

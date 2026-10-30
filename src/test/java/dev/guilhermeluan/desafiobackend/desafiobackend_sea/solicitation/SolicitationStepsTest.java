@@ -7,12 +7,7 @@ import org.junit.jupiter.params.provider.EnumSource;
 import java.math.BigDecimal;
 import java.time.LocalDate;
 
-import static org.junit.jupiter.api.Assertions.assertDoesNotThrow;
-import static org.junit.jupiter.api.Assertions.assertEquals;
-import static org.junit.jupiter.api.Assertions.assertFalse;
-import static org.junit.jupiter.api.Assertions.assertNull;
-import static org.junit.jupiter.api.Assertions.assertThrows;
-import static org.junit.jupiter.api.Assertions.assertTrue;
+import static org.junit.jupiter.api.Assertions.*;
 
 
 class SolicitationStepsTest {
@@ -44,12 +39,15 @@ class SolicitationStepsTest {
         return saveStep3(saveStep2(saveStep1(Solicitation.draft(OWNER_ID))));
     }
 
-    /** Solicitação com as três etapas preenchidas, levada ao status pedido por transições válidas. */
+    /**
+     * Solicitação com as três etapas preenchidas, levada ao status pedido por transições válidas.
+     */
     private static Solicitation filledIn(Status status) {
         Solicitation solicitation = filledDraft();
 
         switch (status) {
-            case DRAFT -> { }
+            case DRAFT -> {
+            }
             case SUBMITTED -> solicitation.submit();
             case IN_REVIEW -> {
                 solicitation.submit();

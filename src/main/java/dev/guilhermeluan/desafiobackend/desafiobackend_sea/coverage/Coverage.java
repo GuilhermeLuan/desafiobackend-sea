@@ -10,10 +10,10 @@ public record Coverage(Set<String> ufs, boolean allUfs) {
         ufs = ufs == null
                 ? Set.of()
                 : ufs.stream()
-                        .filter(Objects::nonNull)
-                        .filter(uf -> !uf.isBlank())
-                        .map(Coverage::normalize)
-                        .collect(Collectors.toUnmodifiableSet());
+                .filter(Objects::nonNull)
+                .filter(uf -> !uf.isBlank())
+                .map(Coverage::normalize)
+                .collect(Collectors.toUnmodifiableSet());
     }
 
     public static Coverage of(Set<String> ufs) {
