@@ -1,6 +1,5 @@
 package dev.guilhermeluan.desafiobackend.desafiobackend_sea.users;
 
-import dev.guilhermeluan.desafiobackend.desafiobackend_sea.coverage.Coverage;
 import org.junit.jupiter.api.Test;
 
 import java.util.HashSet;

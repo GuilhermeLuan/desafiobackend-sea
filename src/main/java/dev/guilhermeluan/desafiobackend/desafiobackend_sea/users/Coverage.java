@@ -1,4 +1,4 @@
-package dev.guilhermeluan.desafiobackend.desafiobackend_sea.coverage;
+package dev.guilhermeluan.desafiobackend.desafiobackend_sea.users;
 
 import java.util.Objects;
 import java.util.Set;
