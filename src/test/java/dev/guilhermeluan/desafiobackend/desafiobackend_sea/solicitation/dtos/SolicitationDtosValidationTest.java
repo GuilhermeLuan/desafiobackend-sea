@@ -1,5 +1,6 @@
 package dev.guilhermeluan.desafiobackend.desafiobackend_sea.solicitation.dtos;
 
+import dev.guilhermeluan.desafiobackend.desafiobackend_sea.solicitation.Decision;
 import dev.guilhermeluan.desafiobackend.desafiobackend_sea.solicitation.Priority;
 import dev.guilhermeluan.desafiobackend.desafiobackend_sea.solicitation.ServiceType;
 import jakarta.validation.Validation;
@@ -128,5 +129,28 @@ class SolicitationDtosValidationTest {
     @Test
     void termsMustBeAccepted() {
         assertEquals(false, valid(confirmation(Priority.LOW, LocalDate.now(), BigDecimal.ONE, false)));
+    }
+
+    // decisão do analista
+
+    @Test
+    void decideAcceptsAValidDecisionAndComment() {
+        assertTrue(valid(new DecideRequest(Decision.APPROVE, "Documentação conferida")));
+    }
+
+    @Test
+    void decideRequiresTheDecision() {
+        assertEquals(false, valid(new DecideRequest(null, "Documentação conferida")));
+    }
+
+    @Test
+    void commentMustHaveBetweenTenAndOneThousandCharactersAfterTrim() {
+        assertEquals(false, valid(new DecideRequest(Decision.REJECT, null)));
+        assertEquals(false, valid(new DecideRequest(Decision.REJECT, "   ")));
+        assertEquals(false, valid(new DecideRequest(Decision.REJECT, "a".repeat(9))));
+        assertEquals(false, valid(new DecideRequest(Decision.REJECT, "  " + "a".repeat(9) + "  ")));
+        assertEquals(false, valid(new DecideRequest(Decision.REJECT, "a".repeat(1001))));
+        assertTrue(valid(new DecideRequest(Decision.REJECT, "a".repeat(10))));
+        assertTrue(valid(new DecideRequest(Decision.REJECT, "a".repeat(1000))));
     }
 }

@@ -1,0 +1,71 @@
+### Pré-requisitos: rode http/users.http (cria o analista analyst@example.com com UFs SP e DF)
+### e http/solicitations.http (deixa uma solicitação SUBMITTED na variável "solicitation_id", UF RJ)
+
+### Login como ANALYST (guarda o token em "analyst_token")
+POST {{host}}/auth/login
+Content-Type: application/json
+
+{
+  "email": "analyst@example.com",
+  "password": "password123"
+}
+
+> {%
+    client.global.set("analyst_token", response.body.token);
+%}
+
+### Solicitação fora da cobertura (RJ não está em SP, DF) -> 404
+GET {{host}}/analyst/solicitations/{{solicitation_id}}
+Authorization: Bearer {{analyst_token}}
+
+### Id inexistente -> 404 (mesma resposta de "fora da cobertura")
+GET {{host}}/analyst/solicitations/999999
+Authorization: Bearer {{analyst_token}}
+
+### Dica: para testar o caminho feliz, no solicitations.http use um CEP de SP (ex.: 01310-100)
+### ou atribua RJ à cobertura do analista com PUT /admin/users/{id}/coverage
+
+### Iniciar análise -> 200, status IN_REVIEW
+POST {{host}}/analyst/solicitations/{{solicitation_id}}/start
+Authorization: Bearer {{analyst_token}}
+
+### Iniciar de novo -> 409
+POST {{host}}/analyst/solicitations/{{solicitation_id}}/start
+Authorization: Bearer {{analyst_token}}
+
+### Decidir com comentário curto -> 400
+POST {{host}}/analyst/solicitations/{{solicitation_id}}/decide
+Content-Type: application/json
+Authorization: Bearer {{analyst_token}}
+
+{
+  "decision": "APPROVE",
+  "comment": "ok"
+}
+
+### Aprovar -> 200, status APPROVED
+POST {{host}}/analyst/solicitations/{{solicitation_id}}/decide
+Content-Type: application/json
+Authorization: Bearer {{analyst_token}}
+
+{
+  "decision": "APPROVE",
+  "comment": "Documentação conferida e aprovada"
+}
+
+### Decidir de novo -> 409
+POST {{host}}/analyst/solicitations/{{solicitation_id}}/decide
+Content-Type: application/json
+Authorization: Bearer {{analyst_token}}
+
+{
+  "decision": "REJECT",
+  "comment": "Mudei de ideia sobre esta solicitação"
+}
+
+### CLIENT não acessa as rotas do analista -> 403
+GET {{host}}/analyst/solicitations/{{solicitation_id}}
+Authorization: Bearer {{client_token}}
+
+### Sem token -> 401
+GET {{host}}/analyst/solicitations/{{solicitation_id}}
