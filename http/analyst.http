@@ -1,7 +1,118 @@
-### Pré-requisitos: rode http/users.http (cria o analista analyst@example.com com UFs SP e DF)
-### e http/solicitations.http (deixa uma solicitação SUBMITTED na variável "solicitation_id", UF RJ)
+### Pré-requisito: rode http/users.http antes (cria o analista analyst@example.com, que cobre SP e DF).
+### Este arquivo é autossuficiente: ele cria os próprios clientes e solicitações.
 
-### Login como ANALYST (guarda o token em "analyst_token")
+### 1. Registrar um CLIENT (se já existir, retorna 409; pode ignorar)
+POST {{host}}/auth/register
+Content-Type: application/json
+
+{
+  "email": "client@example.com",
+  "password": "password123"
+}
+
+### 2. Login como CLIENT (guarda o token em "client_token")
+POST {{host}}/auth/login
+Content-Type: application/json
+
+{
+  "email": "client@example.com",
+  "password": "password123"
+}
+
+> {%
+    client.global.set("client_token", response.body.token);
+%}
+
+### 3. Criar rascunho em SP (guarda o id em "sp_solicitation_id")
+POST {{host}}/solicitations
+Authorization: Bearer {{client_token}}
+
+> {%
+    client.global.set("sp_solicitation_id", response.body.id);
+%}
+
+### 4. Etapa 1
+PUT {{host}}/solicitations/{{sp_solicitation_id}}/steps/1
+Content-Type: application/json
+Authorization: Bearer {{client_token}}
+
+{
+  "serviceType": "INSTALLATION",
+  "title": "Instalar ar-condicionado",
+  "description": "Instalação de um split na sala de estar do apartamento"
+}
+
+### 5. Etapa 2 (CEP de SP, dentro da cobertura do analista)
+PUT {{host}}/solicitations/{{sp_solicitation_id}}/steps/2
+Content-Type: application/json
+Authorization: Bearer {{client_token}}
+
+{
+  "cep": "01310-100",
+  "number": "1578"
+}
+
+### 6. Etapa 3
+PUT {{host}}/solicitations/{{sp_solicitation_id}}/steps/3
+Content-Type: application/json
+Authorization: Bearer {{client_token}}
+
+{
+  "priority": "MEDIUM",
+  "preferredDate": "2030-01-15",
+  "estimatedValue": 250.00,
+  "termsAccepted": true
+}
+
+### 7. Submit -> SUBMITTED
+POST {{host}}/solicitations/{{sp_solicitation_id}}/submit
+Authorization: Bearer {{client_token}}
+
+### 8. Criar outra solicitação, desta vez no RJ (guarda o id em "rj_solicitation_id")
+POST {{host}}/solicitations
+Authorization: Bearer {{client_token}}
+
+> {%
+    client.global.set("rj_solicitation_id", response.body.id);
+%}
+
+### 9. Etapas 1 a 3 e submit da solicitação do RJ
+PUT {{host}}/solicitations/{{rj_solicitation_id}}/steps/1
+Content-Type: application/json
+Authorization: Bearer {{client_token}}
+
+{
+  "serviceType": "MAINTENANCE",
+  "title": "Revisar elevador",
+  "description": "Revisão preventiva do elevador social do prédio"
+}
+
+###
+PUT {{host}}/solicitations/{{rj_solicitation_id}}/steps/2
+Content-Type: application/json
+Authorization: Bearer {{client_token}}
+
+{
+  "cep": "22785-275",
+  "number": "25997"
+}
+
+###
+PUT {{host}}/solicitations/{{rj_solicitation_id}}/steps/3
+Content-Type: application/json
+Authorization: Bearer {{client_token}}
+
+{
+  "priority": "LOW",
+  "estimatedValue": 80.00,
+  "termsAccepted": true
+}
+
+###
+POST {{host}}/solicitations/{{rj_solicitation_id}}/submit
+Authorization: Bearer {{client_token}}
+
+### 10. Login como ANALYST (guarda o token em "analyst_token")
 POST {{host}}/auth/login
 Content-Type: application/json
 
@@ -14,27 +125,32 @@ Content-Type: application/json
     client.global.set("analyst_token", response.body.token);
 %}
 
-### Solicitação fora da cobertura (RJ não está em SP, DF) -> 404
-GET {{host}}/analyst/solicitations/{{solicitation_id}}
+### Solicitação do RJ, fora da cobertura (SP, DF) -> 404
+GET {{host}}/analyst/solicitations/{{rj_solicitation_id}}
 Authorization: Bearer {{analyst_token}}
 
 ### Id inexistente -> 404 (mesma resposta de "fora da cobertura")
 GET {{host}}/analyst/solicitations/999999
 Authorization: Bearer {{analyst_token}}
 
-### Dica: para testar o caminho feliz, no solicitations.http use um CEP de SP (ex.: 01310-100)
-### ou atribua RJ à cobertura do analista com PUT /admin/users/{id}/coverage
+### Solicitação de SP, dentro da cobertura -> 200
+GET {{host}}/analyst/solicitations/{{sp_solicitation_id}}
+Authorization: Bearer {{analyst_token}}
 
 ### Iniciar análise -> 200, status IN_REVIEW
-POST {{host}}/analyst/solicitations/{{solicitation_id}}/start
+POST {{host}}/analyst/solicitations/{{sp_solicitation_id}}/start
 Authorization: Bearer {{analyst_token}}
 
 ### Iniciar de novo -> 409
-POST {{host}}/analyst/solicitations/{{solicitation_id}}/start
+POST {{host}}/analyst/solicitations/{{sp_solicitation_id}}/start
+Authorization: Bearer {{analyst_token}}
+
+### Iniciar a do RJ (fora da cobertura) -> 404
+POST {{host}}/analyst/solicitations/{{rj_solicitation_id}}/start
 Authorization: Bearer {{analyst_token}}
 
 ### Decidir com comentário curto -> 400
-POST {{host}}/analyst/solicitations/{{solicitation_id}}/decide
+POST {{host}}/analyst/solicitations/{{sp_solicitation_id}}/decide
 Content-Type: application/json
 Authorization: Bearer {{analyst_token}}
 
@@ -44,7 +160,7 @@ Authorization: Bearer {{analyst_token}}
 }
 
 ### Aprovar -> 200, status APPROVED
-POST {{host}}/analyst/solicitations/{{solicitation_id}}/decide
+POST {{host}}/analyst/solicitations/{{sp_solicitation_id}}/decide
 Content-Type: application/json
 Authorization: Bearer {{analyst_token}}
 
@@ -54,7 +170,7 @@ Authorization: Bearer {{analyst_token}}
 }
 
 ### Decidir de novo -> 409
-POST {{host}}/analyst/solicitations/{{solicitation_id}}/decide
+POST {{host}}/analyst/solicitations/{{sp_solicitation_id}}/decide
 Content-Type: application/json
 Authorization: Bearer {{analyst_token}}
 
@@ -63,9 +179,19 @@ Authorization: Bearer {{analyst_token}}
   "comment": "Mudei de ideia sobre esta solicitação"
 }
 
+### Decidir a do RJ (fora da cobertura) -> 404
+POST {{host}}/analyst/solicitations/{{rj_solicitation_id}}/decide
+Content-Type: application/json
+Authorization: Bearer {{analyst_token}}
+
+{
+  "decision": "REJECT",
+  "comment": "Fora da área de atendimento"
+}
+
 ### CLIENT não acessa as rotas do analista -> 403
-GET {{host}}/analyst/solicitations/{{solicitation_id}}
+GET {{host}}/analyst/solicitations/{{sp_solicitation_id}}
 Authorization: Bearer {{client_token}}
 
 ### Sem token -> 401
-GET {{host}}/analyst/solicitations/{{solicitation_id}}
+GET {{host}}/analyst/solicitations/{{sp_solicitation_id}}
