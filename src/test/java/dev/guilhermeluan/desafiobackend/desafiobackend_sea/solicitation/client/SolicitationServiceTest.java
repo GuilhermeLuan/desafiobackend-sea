@@ -1,8 +1,13 @@
-package dev.guilhermeluan.desafiobackend.desafiobackend_sea.solicitation;
+package dev.guilhermeluan.desafiobackend.desafiobackend_sea.solicitation.client;
 
-import dev.guilhermeluan.desafiobackend.desafiobackend_sea.solicitation.dtos.AddressRequest;
-import dev.guilhermeluan.desafiobackend.desafiobackend_sea.solicitation.dtos.BasicDataRequest;
-import dev.guilhermeluan.desafiobackend.desafiobackend_sea.solicitation.dtos.ConfirmationRequest;
+import dev.guilhermeluan.desafiobackend.desafiobackend_sea.cep.CepClient;
+import dev.guilhermeluan.desafiobackend.desafiobackend_sea.cep.CepResult;
+import dev.guilhermeluan.desafiobackend.desafiobackend_sea.cep.CepServiceUnavailableException;
+import dev.guilhermeluan.desafiobackend.desafiobackend_sea.cep.InvalidCepException;
+import dev.guilhermeluan.desafiobackend.desafiobackend_sea.solicitation.*;
+import dev.guilhermeluan.desafiobackend.desafiobackend_sea.solicitation.client.dtos.AddressRequest;
+import dev.guilhermeluan.desafiobackend.desafiobackend_sea.solicitation.client.dtos.BasicDataRequest;
+import dev.guilhermeluan.desafiobackend.desafiobackend_sea.solicitation.client.dtos.ConfirmationRequest;
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
 import org.junit.jupiter.api.extension.ExtendWith;
@@ -46,15 +51,15 @@ class SolicitationServiceTest {
 
     private Solicitation draft;
 
+    private static Solicitation persisted(Solicitation solicitation) {
+        ReflectionTestUtils.setField(solicitation, "id", ID);
+        return solicitation;
+    }
+
     @BeforeEach
     void setUp() {
         draft = persisted(Solicitation.draft(OWNER_ID));
         lenient().when(solicitationRepository.findById(ID)).thenReturn(Optional.of(draft));
-    }
-
-    private static Solicitation persisted(Solicitation solicitation) {
-        ReflectionTestUtils.setField(solicitation, "id", ID);
-        return solicitation;
     }
 
     private void withStepOneSaved() {

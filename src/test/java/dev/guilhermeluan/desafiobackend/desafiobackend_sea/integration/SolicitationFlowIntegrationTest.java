@@ -7,21 +7,12 @@ import static org.springframework.test.web.servlet.request.MockMvcRequestBuilder
 import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.jsonPath;
 import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.status;
 
+/**
+ * Fluxo crítico de ponta a ponta: cliente cria e envia, analista da UF consulta, inicia e decide.
+ */
 class SolicitationFlowIntegrationTest extends BaseIntegrationTest {
 
     // fluxo principal
-
-    private static final String BASIC_DATA = """
-            {"serviceType":"INSTALLATION","title":"Instalar ar-condicionado",
-             "description":"Instalação de um split na sala de estar do apartamento"}""";
-    private static final String CONFIRMATION = """
-            {"priority":"MEDIUM","preferredDate":"2099-01-15","estimatedValue":250.00,"termsAccepted":true}""";
-
-    // etapas e submit
-
-    private static String address(String cep, String number) {
-        return "{\"cep\":\"" + cep + "\",\"number\":\"" + number + "\"}";
-    }
 
     @Test
     void clientSubmitsAndTheAnalystCoveringTheUfApprovesIt() throws Exception {
@@ -66,7 +57,7 @@ class SolicitationFlowIntegrationTest extends BaseIntegrationTest {
                 .andExpect(jsonPath("$.status").value("REJECTED"));
     }
 
-    // isolamento entre clientes
+    // etapas e submit
 
     @Test
     void submitOfAnIncompleteDraftListsWhatIsMissing() throws Exception {
@@ -84,8 +75,6 @@ class SolicitationFlowIntegrationTest extends BaseIntegrationTest {
         send(get("/solicitations/" + id), clientToken)
                 .andExpect(jsonPath("$.status").value("DRAFT"));
     }
-
-    // cobertura do analista
 
     @Test
     void stepsMustBeSavedInOrderAndAnUnknownCepIsRejected() throws Exception {
@@ -112,6 +101,8 @@ class SolicitationFlowIntegrationTest extends BaseIntegrationTest {
         send(post("/solicitations/" + id + "/submit"), clientToken).andExpect(status().isConflict());
     }
 
+    // isolamento entre clientes
+
     @Test
     void anotherClientCannotSeeEditOrSubmitSomeoneElsesSolicitation() throws Exception {
         long id = createDraft(registerClientAndLogin());
@@ -121,6 +112,8 @@ class SolicitationFlowIntegrationTest extends BaseIntegrationTest {
         send(put("/solicitations/" + id + "/steps/1"), intruderToken, BASIC_DATA).andExpect(status().isNotFound());
         send(post("/solicitations/" + id + "/submit"), intruderToken).andExpect(status().isNotFound());
     }
+
+    // cobertura do analista
 
     @Test
     void anAnalystOutsideTheCoverageGetsNotFoundAndNothingChanges() throws Exception {
@@ -138,8 +131,6 @@ class SolicitationFlowIntegrationTest extends BaseIntegrationTest {
                 .andExpect(jsonPath("$.status").value("SUBMITTED"))
                 .andExpect(jsonPath("$.decidedBy").doesNotExist());
     }
-
-    // papéis
 
     @Test
     void theAnalystCoveringBrasiliaSeesItAndTheOneCoveringSaoPauloDoesNot() throws Exception {
@@ -170,10 +161,8 @@ class SolicitationFlowIntegrationTest extends BaseIntegrationTest {
                 .andExpect(status().isNotFound()).andReturn().getResponse().getContentAsString();
 
         org.junit.jupiter.api.Assertions.assertEquals(
-                JsonPath.<String>read(uncovered, "$.detail"), JsonPath.<String>read(missing, "$.detail"));
+                JsonPath.<String>read(uncovered, "$.message"), JsonPath.<String>read(missing, "$.message"));
     }
-
-    // apoio
 
     @Test
     void anAnalystNeverSeesDrafts() throws Exception {
@@ -182,6 +171,8 @@ class SolicitationFlowIntegrationTest extends BaseIntegrationTest {
 
         send(get("/analyst/solicitations/" + id), analystToken).andExpect(status().isNotFound());
     }
+
+    // papéis
 
     @Test
     void eachRoleStaysInItsOwnArea() throws Exception {
@@ -199,21 +190,5 @@ class SolicitationFlowIntegrationTest extends BaseIntegrationTest {
     void requestsWithoutTokenAreRejected() throws Exception {
         mockMvc.perform(post("/solicitations")).andExpect(status().isUnauthorized());
         mockMvc.perform(get("/analyst/solicitations/1")).andExpect(status().isUnauthorized());
-    }
-
-    private long createDraft(String clientToken) throws Exception {
-        String body = send(post("/solicitations"), clientToken)
-                .andExpect(status().isCreated())
-                .andReturn().getResponse().getContentAsString();
-        return ((Number) JsonPath.read(body, "$.id")).longValue();
-    }
-
-    private long submittedSolicitation(String clientToken, String cep) throws Exception {
-        long id = createDraft(clientToken);
-        send(put("/solicitations/" + id + "/steps/1"), clientToken, BASIC_DATA).andExpect(status().isOk());
-        send(put("/solicitations/" + id + "/steps/2"), clientToken, address(cep, "1578")).andExpect(status().isOk());
-        send(put("/solicitations/" + id + "/steps/3"), clientToken, CONFIRMATION).andExpect(status().isOk());
-        send(post("/solicitations/" + id + "/submit"), clientToken).andExpect(status().isOk());
-        return id;
     }
 }

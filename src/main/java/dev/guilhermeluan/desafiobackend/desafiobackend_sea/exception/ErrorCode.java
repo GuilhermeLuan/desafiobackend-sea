@@ -1,0 +1,20 @@
+package dev.guilhermeluan.desafiobackend.desafiobackend_sea.exception;
+
+public enum ErrorCode {
+    VALIDATION_ERROR,
+    MALFORMED_REQUEST,
+    REQUEST_ERROR,
+    UNAUTHORIZED,
+    FORBIDDEN,
+    NOT_FOUND,
+    INVALID_CREDENTIALS,
+    EMAIL_ALREADY_REGISTERED,
+    INVALID_ROLE,
+    INVALID_COVERAGE,
+    INVALID_STATE,
+    INVALID_DATA,
+    INVALID_CEP,
+    CEP_SERVICE_UNAVAILABLE,
+    INCOMPLETE_SOLICITATION,
+    INTERNAL_ERROR
+}

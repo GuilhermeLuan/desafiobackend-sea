@@ -1,8 +1,15 @@
-package dev.guilhermeluan.desafiobackend.desafiobackend_sea.solicitation;
+package dev.guilhermeluan.desafiobackend.desafiobackend_sea.solicitation.client;
 
-import dev.guilhermeluan.desafiobackend.desafiobackend_sea.solicitation.dtos.AddressRequest;
-import dev.guilhermeluan.desafiobackend.desafiobackend_sea.solicitation.dtos.BasicDataRequest;
-import dev.guilhermeluan.desafiobackend.desafiobackend_sea.solicitation.dtos.ConfirmationRequest;
+import dev.guilhermeluan.desafiobackend.desafiobackend_sea.cep.CepClient;
+import dev.guilhermeluan.desafiobackend.desafiobackend_sea.cep.CepResult;
+import dev.guilhermeluan.desafiobackend.desafiobackend_sea.cep.InvalidCepException;
+import dev.guilhermeluan.desafiobackend.desafiobackend_sea.solicitation.Address;
+import dev.guilhermeluan.desafiobackend.desafiobackend_sea.solicitation.Solicitation;
+import dev.guilhermeluan.desafiobackend.desafiobackend_sea.solicitation.SolicitationNotFoundException;
+import dev.guilhermeluan.desafiobackend.desafiobackend_sea.solicitation.SolicitationRepository;
+import dev.guilhermeluan.desafiobackend.desafiobackend_sea.solicitation.client.dtos.AddressRequest;
+import dev.guilhermeluan.desafiobackend.desafiobackend_sea.solicitation.client.dtos.BasicDataRequest;
+import dev.guilhermeluan.desafiobackend.desafiobackend_sea.solicitation.client.dtos.ConfirmationRequest;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 
@@ -18,6 +25,10 @@ public class SolicitationService {
     public SolicitationService(SolicitationRepository solicitationRepository, CepClient cepClient) {
         this.solicitationRepository = solicitationRepository;
         this.cepClient = cepClient;
+    }
+
+    private static boolean isBlank(String value) {
+        return value == null || value.isBlank();
     }
 
     @Transactional
@@ -57,14 +68,10 @@ public class SolicitationService {
         return draft;
     }
 
-    private static boolean isBlank(String value) {
-        return value == null || value.isBlank();
-    }
-
     private Solicitation findOwned(Long ownerId, Long draftId) {
 
         Solicitation draft = solicitationRepository.findById(draftId).orElseThrow(() -> new SolicitationNotFoundException(draftId));
-        if(!Objects.equals(draft.getOwnerId(), ownerId)){
+        if (!Objects.equals(draft.getOwnerId(), ownerId)) {
             throw new SolicitationNotFoundException(draftId);
         }
         return draft;

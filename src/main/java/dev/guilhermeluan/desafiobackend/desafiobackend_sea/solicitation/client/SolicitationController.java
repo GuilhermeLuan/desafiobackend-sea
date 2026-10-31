@@ -1,8 +1,8 @@
-package dev.guilhermeluan.desafiobackend.desafiobackend_sea.solicitation;
+package dev.guilhermeluan.desafiobackend.desafiobackend_sea.solicitation.client;
 
-import dev.guilhermeluan.desafiobackend.desafiobackend_sea.solicitation.dtos.AddressRequest;
-import dev.guilhermeluan.desafiobackend.desafiobackend_sea.solicitation.dtos.BasicDataRequest;
-import dev.guilhermeluan.desafiobackend.desafiobackend_sea.solicitation.dtos.ConfirmationRequest;
+import dev.guilhermeluan.desafiobackend.desafiobackend_sea.solicitation.client.dtos.AddressRequest;
+import dev.guilhermeluan.desafiobackend.desafiobackend_sea.solicitation.client.dtos.BasicDataRequest;
+import dev.guilhermeluan.desafiobackend.desafiobackend_sea.solicitation.client.dtos.ConfirmationRequest;
 import dev.guilhermeluan.desafiobackend.desafiobackend_sea.solicitation.dtos.SolicitationResponse;
 import dev.guilhermeluan.desafiobackend.desafiobackend_sea.users.UserService;
 import jakarta.validation.Valid;

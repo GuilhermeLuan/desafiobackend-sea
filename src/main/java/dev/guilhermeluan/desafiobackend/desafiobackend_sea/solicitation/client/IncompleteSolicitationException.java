@@ -1,4 +1,4 @@
-package dev.guilhermeluan.desafiobackend.desafiobackend_sea.solicitation;
+package dev.guilhermeluan.desafiobackend.desafiobackend_sea.solicitation.client;
 
 import java.util.List;
 

@@ -1,6 +1,7 @@
-package dev.guilhermeluan.desafiobackend.desafiobackend_sea.solicitation;
+package dev.guilhermeluan.desafiobackend.desafiobackend_sea.solicitation.analyst;
 
 import dev.guilhermeluan.desafiobackend.desafiobackend_sea.coverage.CoverageGuard;
+import dev.guilhermeluan.desafiobackend.desafiobackend_sea.solicitation.*;
 import dev.guilhermeluan.desafiobackend.desafiobackend_sea.users.Role;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;

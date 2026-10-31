@@ -1,8 +1,8 @@
 package dev.guilhermeluan.desafiobackend.desafiobackend_sea.integration;
 
 import com.jayway.jsonpath.JsonPath;
-import dev.guilhermeluan.desafiobackend.desafiobackend_sea.solicitation.CepClient;
-import dev.guilhermeluan.desafiobackend.desafiobackend_sea.solicitation.CepResult;
+import dev.guilhermeluan.desafiobackend.desafiobackend_sea.cep.CepClient;
+import dev.guilhermeluan.desafiobackend.desafiobackend_sea.cep.CepResult;
 import org.junit.jupiter.api.BeforeEach;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.boot.test.context.SpringBootTest;
@@ -20,6 +20,7 @@ import java.util.UUID;
 
 import static org.mockito.Mockito.when;
 import static org.springframework.test.web.servlet.request.MockMvcRequestBuilders.post;
+import static org.springframework.test.web.servlet.request.MockMvcRequestBuilders.put;
 import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.status;
 
 @SpringBootTest
@@ -96,5 +97,34 @@ public abstract class BaseIntegrationTest {
                 "{\"email\":\"" + email + "\",\"password\":\"" + PASSWORD + "\",\"role\":\"ANALYST\",\"coverageUfs\":" + coverage + "}")
                 .andExpect(status().isCreated());
         return login(email, PASSWORD);
+    }
+
+    // solicitações
+
+    protected static final String BASIC_DATA = """
+            {"serviceType":"INSTALLATION","title":"Instalar ar-condicionado",
+             "description":"Instalação de um split na sala de estar do apartamento"}""";
+
+    protected static final String CONFIRMATION = """
+            {"priority":"MEDIUM","preferredDate":"2099-01-15","estimatedValue":250.00,"termsAccepted":true}""";
+
+    protected static String address(String cep, String number) {
+        return "{\"cep\":\"" + cep + "\",\"number\":\"" + number + "\"}";
+    }
+
+    protected long createDraft(String clientToken) throws Exception {
+        String body = send(post("/solicitations"), clientToken)
+                .andExpect(status().isCreated())
+                .andReturn().getResponse().getContentAsString();
+        return ((Number) JsonPath.read(body, "$.id")).longValue();
+    }
+
+    protected long submittedSolicitation(String clientToken, String cep) throws Exception {
+        long id = createDraft(clientToken);
+        send(put("/solicitations/" + id + "/steps/1"), clientToken, BASIC_DATA).andExpect(status().isOk());
+        send(put("/solicitations/" + id + "/steps/2"), clientToken, address(cep, "1578")).andExpect(status().isOk());
+        send(put("/solicitations/" + id + "/steps/3"), clientToken, CONFIRMATION).andExpect(status().isOk());
+        send(post("/solicitations/" + id + "/submit"), clientToken).andExpect(status().isOk());
+        return id;
     }
 }

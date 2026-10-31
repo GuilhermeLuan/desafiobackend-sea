@@ -1,4 +1,4 @@
-package dev.guilhermeluan.desafiobackend.desafiobackend_sea.solicitation.dtos;
+package dev.guilhermeluan.desafiobackend.desafiobackend_sea.solicitation.client.dtos;
 
 import dev.guilhermeluan.desafiobackend.desafiobackend_sea.solicitation.ServiceType;
 import jakarta.validation.constraints.NotBlank;

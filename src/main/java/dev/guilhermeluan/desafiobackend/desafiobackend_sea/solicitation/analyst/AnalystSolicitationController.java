@@ -1,6 +1,6 @@
-package dev.guilhermeluan.desafiobackend.desafiobackend_sea.solicitation;
+package dev.guilhermeluan.desafiobackend.desafiobackend_sea.solicitation.analyst;
 
-import dev.guilhermeluan.desafiobackend.desafiobackend_sea.solicitation.dtos.DecideRequest;
+import dev.guilhermeluan.desafiobackend.desafiobackend_sea.solicitation.analyst.dtos.DecideRequest;
 import dev.guilhermeluan.desafiobackend.desafiobackend_sea.solicitation.dtos.SolicitationResponse;
 import dev.guilhermeluan.desafiobackend.desafiobackend_sea.users.UserService;
 import jakarta.validation.Valid;
