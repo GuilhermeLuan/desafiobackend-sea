@@ -14,6 +14,7 @@ import org.junit.jupiter.api.extension.ExtendWith;
 import org.mockito.InjectMocks;
 import org.mockito.Mock;
 import org.mockito.junit.jupiter.MockitoExtension;
+import org.springframework.context.ApplicationEventPublisher;
 import org.springframework.test.util.ReflectionTestUtils;
 
 import java.math.BigDecimal;
@@ -45,6 +46,7 @@ class SolicitationServiceTest {
     private SolicitationRepository solicitationRepository;
     @Mock
     private CepClient cepClient;
+    private static final SolicitationChangedEvent CHANGED = new SolicitationChangedEvent(ID);
 
     @InjectMocks
     private SolicitationService service;
@@ -353,5 +355,104 @@ class SolicitationServiceTest {
 
         assertThrows(InvalidSolicitationStateException.class, () -> service.submit(OWNER_ID, ID));
         assertEquals(Status.SUBMITTED, draft.getStatus());
+    }
+
+    // eventos para o índice de busca
+    @Mock
+    private ApplicationEventPublisher events;
+
+    @Test
+    void createDraftPublishesAChangedEventWithTheGeneratedId() {
+        when(solicitationRepository.save(any(Solicitation.class))).thenAnswer(i -> persisted(i.getArgument(0)));
+
+        service.createDraft(OWNER_ID);
+
+        verify(events).publishEvent(CHANGED);
+    }
+
+    @Test
+    void saveBasicDataPublishesAChangedEvent() {
+        service.saveBasicData(OWNER_ID, ID, BASIC);
+
+        verify(events).publishEvent(CHANGED);
+    }
+
+    @Test
+    void saveAddressPublishesAChangedEvent() {
+        withStepOneSaved();
+        when(cepClient.findByCep("22785275")).thenReturn(Optional.of(NINHO_DO_URUBU));
+
+        service.saveAddress(OWNER_ID, ID, ADDRESS);
+
+        verify(events).publishEvent(CHANGED);
+    }
+
+    @Test
+    void saveConfirmationPublishesAChangedEvent() {
+        withStepTwoSaved();
+
+        service.saveConfirmation(OWNER_ID, ID, new ConfirmationRequest(Priority.MEDIUM, TOMORROW, new BigDecimal("250.00"), true));
+
+        verify(events).publishEvent(CHANGED);
+    }
+
+    @Test
+    void submitPublishesAChangedEvent() {
+        withStepThreeSaved();
+
+        service.submit(OWNER_ID, ID);
+
+        verify(events).publishEvent(CHANGED);
+    }
+
+    @Test
+    void nothingIsPublishedWhenTheClientIsNotTheOwner() {
+        withStepThreeSaved();
+
+        assertThrows(SolicitationNotFoundException.class, () -> service.saveBasicData(OTHER_CLIENT_ID, ID, BASIC));
+        assertThrows(SolicitationNotFoundException.class, () -> service.submit(OTHER_CLIENT_ID, ID));
+
+        verifyNoInteractions(events);
+    }
+
+    @Test
+    void nothingIsPublishedWhenTheCepIsUnknownOrTheCepServiceIsDown() {
+        withStepOneSaved();
+        when(cepClient.findByCep("22785275")).thenReturn(Optional.empty());
+
+        assertThrows(InvalidCepException.class, () -> service.saveAddress(OWNER_ID, ID, ADDRESS));
+
+        when(cepClient.findByCep("22785275"))
+                .thenThrow(new CepServiceUnavailableException("ViaCEP is down", new RuntimeException()));
+
+        assertThrows(CepServiceUnavailableException.class, () -> service.saveAddress(OWNER_ID, ID, ADDRESS));
+
+        verifyNoInteractions(events);
+    }
+
+    @Test
+    void nothingIsPublishedWhenTheDomainRejectsTheChange() {
+        withStepTwoSaved();
+
+        assertThrows(InvalidSolicitationDataException.class, () -> service.saveConfirmation(OWNER_ID, ID,
+                new ConfirmationRequest(Priority.HIGH, TOMORROW, new BigDecimal("99.99"), true)));
+
+        verifyNoInteractions(events);
+    }
+
+    @Test
+    void nothingIsPublishedWhenTheSubmitIsIncomplete() {
+        withStepOneSaved();
+
+        assertThrows(IncompleteSolicitationException.class, () -> service.submit(OWNER_ID, ID));
+
+        verifyNoInteractions(events);
+    }
+
+    @Test
+    void readingDoesNotPublishAnything() {
+        service.get(OWNER_ID, ID);
+
+        verifyNoInteractions(events);
     }
 }

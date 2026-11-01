@@ -11,6 +11,7 @@ import org.junit.jupiter.params.ParameterizedTest;
 import org.junit.jupiter.params.provider.EnumSource;
 import org.mockito.Mock;
 import org.mockito.junit.jupiter.MockitoExtension;
+import org.springframework.context.ApplicationEventPublisher;
 import org.springframework.test.util.ReflectionTestUtils;
 
 import java.math.BigDecimal;
@@ -19,8 +20,7 @@ import java.util.Optional;
 import java.util.Set;
 
 import static org.junit.jupiter.api.Assertions.*;
-import static org.mockito.Mockito.lenient;
-import static org.mockito.Mockito.when;
+import static org.mockito.Mockito.*;
 
 @ExtendWith(MockitoExtension.class)
 class AnalystSolicitationServiceTest {
@@ -35,15 +35,11 @@ class AnalystSolicitationServiceTest {
     private UserRepository userRepository;
     @Mock
     private SolicitationRepository solicitationRepository;
+    private static final SolicitationChangedEvent CHANGED = new SolicitationChangedEvent(ID);
 
     private AnalystSolicitationService service;
-
-    @BeforeEach
-    void setUp() {
-        // o analista cobre RJ e SP; o guard é o real, só o acesso ao banco é simulado
-        lenient().when(userRepository.findCoverageUfsByEmail(ANALYST_EMAIL)).thenReturn(Set.of("RJ", "SP"));
-        service = new AnalystSolicitationService(solicitationRepository, new CoverageGuard(userRepository));
-    }
+    @Mock
+    private ApplicationEventPublisher events;
 
     /**
      * Solicitação completa na UF pedida, ainda em DRAFT, disponível no repositório com o id {@code ID}.
@@ -222,5 +218,72 @@ class AnalystSolicitationServiceTest {
         assertEquals(Status.APPROVED, solicitation.getStatus());
         assertEquals(ANALYST_ID, solicitation.getDecidedBy());
         assertEquals(COMMENT, solicitation.getDecisionComment());
+    }
+
+    // eventos para o índice de busca
+
+    @BeforeEach
+    void setUp() {
+        // o analista cobre RJ e SP; o guard é o real, só o acesso ao banco é simulado
+        lenient().when(userRepository.findCoverageUfsByEmail(ANALYST_EMAIL)).thenReturn(Set.of("RJ", "SP"));
+        service = new AnalystSolicitationService(solicitationRepository, new CoverageGuard(userRepository), events);
+    }
+
+    @Test
+    void startPublishesAChangedEvent() {
+        submittedIn("RJ");
+
+        service.start(ANALYST_EMAIL, ID);
+
+        verify(events).publishEvent(CHANGED);
+    }
+
+    @Test
+    void decidePublishesAChangedEvent() {
+        submittedIn("SP");
+
+        service.decide(ANALYST_EMAIL, ANALYST_ID, ID, Decision.APPROVE, COMMENT);
+
+        verify(events).publishEvent(CHANGED);
+    }
+
+    @Test
+    void readingDoesNotPublishAnything() {
+        submittedIn("RJ");
+
+        service.get(ANALYST_EMAIL, ID);
+
+        verifyNoInteractions(events);
+    }
+
+    @Test
+    void nothingIsPublishedForAnUfOutsideTheCoverage() {
+        submittedIn("MG");
+
+        assertThrows(CoverageAccessDeniedException.class, () -> service.start(ANALYST_EMAIL, ID));
+        assertThrows(CoverageAccessDeniedException.class,
+                () -> service.decide(ANALYST_EMAIL, ANALYST_ID, ID, Decision.APPROVE, COMMENT));
+
+        verifyNoInteractions(events);
+    }
+
+    @Test
+    void nothingIsPublishedForADraft() {
+        draftIn("RJ");
+
+        assertThrows(SolicitationNotFoundException.class, () -> service.start(ANALYST_EMAIL, ID));
+        assertThrows(SolicitationNotFoundException.class,
+                () -> service.decide(ANALYST_EMAIL, ANALYST_ID, ID, Decision.APPROVE, COMMENT));
+
+        verifyNoInteractions(events);
+    }
+
+    @Test
+    void nothingIsPublishedWhenTheTransitionIsInvalid() {
+        inReviewIn("RJ");
+
+        assertThrows(InvalidSolicitationStateException.class, () -> service.start(ANALYST_EMAIL, ID));
+
+        verifyNoInteractions(events);
     }
 }

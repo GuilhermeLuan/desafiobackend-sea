@@ -3,6 +3,7 @@ package dev.guilhermeluan.desafiobackend.desafiobackend_sea.solicitation.analyst
 import dev.guilhermeluan.desafiobackend.desafiobackend_sea.coverage.CoverageGuard;
 import dev.guilhermeluan.desafiobackend.desafiobackend_sea.solicitation.*;
 import dev.guilhermeluan.desafiobackend.desafiobackend_sea.users.Role;
+import org.springframework.context.ApplicationEventPublisher;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 
@@ -11,10 +12,13 @@ public class AnalystSolicitationService {
 
     private final SolicitationRepository solicitationRepository;
     private final CoverageGuard coverageGuard;
+    private final ApplicationEventPublisher events;
 
-    public AnalystSolicitationService(SolicitationRepository solicitationRepository, CoverageGuard coverageGuard) {
+    public AnalystSolicitationService(SolicitationRepository solicitationRepository, CoverageGuard coverageGuard,
+                                      ApplicationEventPublisher events) {
         this.solicitationRepository = solicitationRepository;
         this.coverageGuard = coverageGuard;
+        this.events = events;
     }
 
     @Transactional(readOnly = true)
@@ -28,6 +32,8 @@ public class AnalystSolicitationService {
 
         solicitation.start();
 
+        events.publishEvent(new SolicitationChangedEvent(id));
+
         return solicitation;
     }
 
@@ -36,6 +42,8 @@ public class AnalystSolicitationService {
         Solicitation solicitation = findVisible(analystEmail, id);
 
         solicitation.decide(decision, analystId, comment);
+
+        events.publishEvent(new SolicitationChangedEvent(id));
 
         return solicitation;
     }

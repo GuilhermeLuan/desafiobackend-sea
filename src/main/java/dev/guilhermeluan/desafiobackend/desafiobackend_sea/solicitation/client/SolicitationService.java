@@ -3,13 +3,11 @@ package dev.guilhermeluan.desafiobackend.desafiobackend_sea.solicitation.client;
 import dev.guilhermeluan.desafiobackend.desafiobackend_sea.cep.CepClient;
 import dev.guilhermeluan.desafiobackend.desafiobackend_sea.cep.CepResult;
 import dev.guilhermeluan.desafiobackend.desafiobackend_sea.cep.InvalidCepException;
-import dev.guilhermeluan.desafiobackend.desafiobackend_sea.solicitation.Address;
-import dev.guilhermeluan.desafiobackend.desafiobackend_sea.solicitation.Solicitation;
-import dev.guilhermeluan.desafiobackend.desafiobackend_sea.solicitation.SolicitationNotFoundException;
-import dev.guilhermeluan.desafiobackend.desafiobackend_sea.solicitation.SolicitationRepository;
+import dev.guilhermeluan.desafiobackend.desafiobackend_sea.solicitation.*;
 import dev.guilhermeluan.desafiobackend.desafiobackend_sea.solicitation.client.dtos.AddressRequest;
 import dev.guilhermeluan.desafiobackend.desafiobackend_sea.solicitation.client.dtos.BasicDataRequest;
 import dev.guilhermeluan.desafiobackend.desafiobackend_sea.solicitation.client.dtos.ConfirmationRequest;
+import org.springframework.context.ApplicationEventPublisher;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 
@@ -21,10 +19,13 @@ public class SolicitationService {
 
     private final SolicitationRepository solicitationRepository;
     private final CepClient cepClient;
+    private final ApplicationEventPublisher events;
 
-    public SolicitationService(SolicitationRepository solicitationRepository, CepClient cepClient) {
+    public SolicitationService(SolicitationRepository solicitationRepository, CepClient cepClient,
+                               ApplicationEventPublisher events) {
         this.solicitationRepository = solicitationRepository;
         this.cepClient = cepClient;
+        this.events = events;
     }
 
     private static boolean isBlank(String value) {
@@ -34,7 +35,11 @@ public class SolicitationService {
     @Transactional
     public Solicitation createDraft(Long ownerId) {
         Solicitation draft = Solicitation.draft(ownerId);
-        return solicitationRepository.save(draft);
+        Solicitation savedDraft = solicitationRepository.save(draft);
+
+        events.publishEvent(new SolicitationChangedEvent(savedDraft.getId()));
+
+        return savedDraft;
     }
 
     @Transactional(readOnly = true)
@@ -46,6 +51,9 @@ public class SolicitationService {
     public Solicitation saveBasicData(Long ownerId, Long id, BasicDataRequest request) {
         Solicitation draft = findOwned(ownerId, id);
         draft.saveBasicData(request.serviceType(), request.title(), request.description());
+
+        events.publishEvent(new SolicitationChangedEvent(id));
+
         return draft;
     }
 
@@ -58,6 +66,9 @@ public class SolicitationService {
 
         draft.saveAddress(new Address(request.cep(), cep.street(), cep.neighborhood(), cep.city(), cep.state(),
                 request.number(), request.complement()));
+
+        events.publishEvent(new SolicitationChangedEvent(id));
+
         return draft;
     }
 
@@ -65,6 +76,9 @@ public class SolicitationService {
     public Solicitation saveConfirmation(Long ownerId, Long id, ConfirmationRequest request) {
         Solicitation draft = findOwned(ownerId, id);
         draft.saveConfirmation(request.priority(), request.preferredDate(), request.estimatedValue(), request.termsAccepted());
+
+        events.publishEvent(new SolicitationChangedEvent(id));
+
         return draft;
     }
 
@@ -100,6 +114,9 @@ public class SolicitationService {
             throw new IncompleteSolicitationException(missingSteps, missingFields);
         }
         draft.submit();
+
+        events.publishEvent(new SolicitationChangedEvent(id));
+
         return draft;
     }
 
