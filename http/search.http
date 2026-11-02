@@ -1,0 +1,347 @@
+### Busca do analista (GET /analyst/solicitations/search)
+### Este arquivo cria os próprios dados e usa só o ADMIN do .env (ajuste as duas variáveis abaixo se o seu for outro).
+### A cada execução ele usa uma marca nova ("tag") nos textos, então os totais abaixo valem mesmo rodando várias vezes.
+###
+### Dados criados: A (SP, INSTALLATION, MEDIUM, 250), B (DF, MAINTENANCE, HIGH, 500) e C (RJ, LOW, 80), todas enviadas,
+### mais D, um rascunho completo em SP que NÃO foi enviado. O analista criado cobre SP e DF.
+
+### 1. Login como ADMIN (guarda o token e a marca desta execução)
+@admin_email = admin@example.com
+@admin_password = change-me-123
+POST {{host}}/auth/login
+Content-Type: application/json
+
+{
+  "email": "{{admin_email}}",
+  "password": "{{admin_password}}"
+}
+
+> {%
+    client.global.set("admin_token", response.body.token);
+    client.global.set("tag", "demo" + Date.now());
+    client.global.set("today", new Date().toISOString().substring(0, 10));
+%}
+
+### 2. Criar um analista que cobre SP e DF -> 201 (409 se ele já existir; pode ignorar)
+POST {{host}}/admin/users
+Content-Type: application/json
+Authorization: Bearer {{admin_token}}
+
+{
+  "email": "search-analyst@example.com",
+  "password": "password123",
+  "role": "ANALYST",
+  "coverageUfs": ["SP", "DF"]
+}
+
+### 3. Login do analista -> 200
+POST {{host}}/auth/login
+Content-Type: application/json
+
+{
+  "email": "search-analyst@example.com",
+  "password": "password123"
+}
+
+> {%
+    client.global.set("analyst_token", response.body.token);
+%}
+
+### 4. Registrar um cliente -> 201 (409 se ele já existir; pode ignorar)
+POST {{host}}/auth/register
+Content-Type: application/json
+
+{
+  "email": "search-client@example.com",
+  "password": "password123"
+}
+
+### 5. Login do cliente -> 200
+POST {{host}}/auth/login
+Content-Type: application/json
+
+{
+  "email": "search-client@example.com",
+  "password": "password123"
+}
+
+> {%
+    client.global.set("client_token", response.body.token);
+%}
+
+### ---------- Dados: solicitação A (SP). A marca está na descrição ----------
+
+### A: criar rascunho -> 201
+POST {{host}}/solicitations
+Authorization: Bearer {{client_token}}
+
+> {%
+    client.global.set("a_id", response.body.id);
+%}
+
+### A: etapa 1 -> 200
+PUT {{host}}/solicitations/{{a_id}}/steps/1
+Content-Type: application/json
+Authorization: Bearer {{client_token}}
+
+{
+  "serviceType": "INSTALLATION",
+  "title": "Instalar ar-condicionado",
+  "description": "Instalação de um split na sala de estar ({{tag}})"
+}
+
+### A: etapa 2 (CEP de São Paulo) -> 200
+PUT {{host}}/solicitations/{{a_id}}/steps/2
+Content-Type: application/json
+Authorization: Bearer {{client_token}}
+
+{
+  "cep": "01310-100",
+  "number": "1578"
+}
+
+### A: etapa 3 -> 200
+PUT {{host}}/solicitations/{{a_id}}/steps/3
+Content-Type: application/json
+Authorization: Bearer {{client_token}}
+
+{
+  "priority": "MEDIUM",
+  "estimatedValue": 250.00,
+  "termsAccepted": true
+}
+
+### A: enviar -> 200
+POST {{host}}/solicitations/{{a_id}}/submit
+Authorization: Bearer {{client_token}}
+
+### ---------- Dados: solicitação B (DF). A marca está no título ----------
+
+### B: criar rascunho -> 201
+POST {{host}}/solicitations
+Authorization: Bearer {{client_token}}
+
+> {%
+    client.global.set("b_id", response.body.id);
+%}
+
+### B: etapa 1 -> 200
+PUT {{host}}/solicitations/{{b_id}}/steps/1
+Content-Type: application/json
+Authorization: Bearer {{client_token}}
+
+{
+  "serviceType": "MAINTENANCE",
+  "title": "{{tag}} manutenção",
+  "description": "Revisão preventiva do elevador social do prédio"
+}
+
+### B: etapa 2 (CEP de Brasília) -> 200
+PUT {{host}}/solicitations/{{b_id}}/steps/2
+Content-Type: application/json
+Authorization: Bearer {{client_token}}
+
+{
+  "cep": "70150-900",
+  "number": "1"
+}
+
+### B: etapa 3 -> 200
+PUT {{host}}/solicitations/{{b_id}}/steps/3
+Content-Type: application/json
+Authorization: Bearer {{client_token}}
+
+{
+  "priority": "HIGH",
+  "estimatedValue": 500.00,
+  "termsAccepted": true
+}
+
+### B: enviar -> 200
+POST {{host}}/solicitations/{{b_id}}/submit
+Authorization: Bearer {{client_token}}
+
+### ---------- Dados: solicitação C (RJ, fora da cobertura do analista) ----------
+
+### C: criar rascunho -> 201
+POST {{host}}/solicitations
+Authorization: Bearer {{client_token}}
+
+> {%
+    client.global.set("c_id", response.body.id);
+%}
+
+### C: etapa 1 -> 200
+PUT {{host}}/solicitations/{{c_id}}/steps/1
+Content-Type: application/json
+Authorization: Bearer {{client_token}}
+
+{
+  "serviceType": "INSPECTION",
+  "title": "{{tag}} vistoria",
+  "description": "Vistoria anual das instalações elétricas do centro"
+}
+
+### C: etapa 2 (CEP do Rio de Janeiro) -> 200
+PUT {{host}}/solicitations/{{c_id}}/steps/2
+Content-Type: application/json
+Authorization: Bearer {{client_token}}
+
+{
+  "cep": "22785-275",
+  "number": "25997"
+}
+
+### C: etapa 3 -> 200
+PUT {{host}}/solicitations/{{c_id}}/steps/3
+Content-Type: application/json
+Authorization: Bearer {{client_token}}
+
+{
+  "priority": "LOW",
+  "estimatedValue": 80.00,
+  "termsAccepted": true
+}
+
+### C: enviar -> 200
+POST {{host}}/solicitations/{{c_id}}/submit
+Authorization: Bearer {{client_token}}
+
+### ---------- Dados: rascunho D (SP, completo mas NÃO enviado) ----------
+
+### D: criar rascunho -> 201
+POST {{host}}/solicitations
+Authorization: Bearer {{client_token}}
+
+> {%
+    client.global.set("d_id", response.body.id);
+%}
+
+### D: etapa 1 -> 200
+PUT {{host}}/solicitations/{{d_id}}/steps/1
+Content-Type: application/json
+Authorization: Bearer {{client_token}}
+
+{
+  "serviceType": "INSTALLATION",
+  "title": "{{tag}} rascunho",
+  "description": "Este rascunho está completo, mas nunca foi enviado"
+}
+
+### D: etapa 2 -> 200
+PUT {{host}}/solicitations/{{d_id}}/steps/2
+Content-Type: application/json
+Authorization: Bearer {{client_token}}
+
+{
+  "cep": "01310-100",
+  "number": "10"
+}
+
+### D: etapa 3 -> 200
+PUT {{host}}/solicitations/{{d_id}}/steps/3
+Content-Type: application/json
+Authorization: Bearer {{client_token}}
+
+{
+  "priority": "MEDIUM",
+  "estimatedValue": 100.00,
+  "termsAccepted": true
+}
+
+### ================= BUSCAS DO ANALISTA (cobre SP e DF) =================
+
+### Texto livre: acha A (marca na descrição) e B (marca no título). C está no RJ e D é rascunho -> 200, total 2
+GET {{host}}/analyst/solicitations/search?q={{tag}}
+Authorization: Bearer {{analyst_token}}
+
+### Filtro por status -> 200, total 2
+GET {{host}}/analyst/solicitations/search?q={{tag}}&status=SUBMITTED
+Authorization: Bearer {{analyst_token}}
+
+### Filtro por tipo de serviço -> 200, total 1 (B)
+GET {{host}}/analyst/solicitations/search?q={{tag}}&serviceType=MAINTENANCE
+Authorization: Bearer {{analyst_token}}
+
+### Filtro por prioridade -> 200, total 1 (B)
+GET {{host}}/analyst/solicitations/search?q={{tag}}&priority=HIGH
+Authorization: Bearer {{analyst_token}}
+
+### Filtro por UF dentro da cobertura -> 200, total 1 (B, em DF)
+GET {{host}}/analyst/solicitations/search?q={{tag}}&state=DF
+Authorization: Bearer {{analyst_token}}
+
+### UF FORA da cobertura: o state só restringe, então não vaza nada -> 200, total 0
+GET {{host}}/analyst/solicitations/search?q={{tag}}&state=RJ
+Authorization: Bearer {{analyst_token}}
+
+### Pedir rascunhos explicitamente continua dando vazio -> 200, total 0
+GET {{host}}/analyst/solicitations/search?q={{tag}}&status=DRAFT
+Authorization: Bearer {{analyst_token}}
+
+### Intervalo de datas (sobre a data de envio, em UTC) incluindo hoje -> 200, total 2
+GET {{host}}/analyst/solicitations/search?q={{tag}}&dateFrom={{today}}&dateTo={{today}}
+Authorization: Bearer {{analyst_token}}
+
+### Intervalo de datas no passado -> 200, total 0
+GET {{host}}/analyst/solicitations/search?q={{tag}}&dateFrom=2000-01-01&dateTo=2000-01-02
+Authorization: Bearer {{analyst_token}}
+
+### Paginação, página 0 de tamanho 1 -> 200, 1 item, total 2
+GET {{host}}/analyst/solicitations/search?q={{tag}}&size=1&page=0
+Authorization: Bearer {{analyst_token}}
+
+### Paginação, página 1 -> 200, 1 item, total 2
+GET {{host}}/analyst/solicitations/search?q={{tag}}&size=1&page=1
+Authorization: Bearer {{analyst_token}}
+
+### Paginação, página além do fim -> 200, 0 itens, total 2
+GET {{host}}/analyst/solicitations/search?q={{tag}}&size=1&page=2
+Authorization: Bearer {{analyst_token}}
+
+### Ordenação por valor estimado, crescente (A antes de B) -> 200
+GET {{host}}/analyst/solicitations/search?q={{tag}}&sort=estimatedValue,asc
+Authorization: Bearer {{analyst_token}}
+
+### Ordenação por valor estimado, decrescente (B antes de A) -> 200
+GET {{host}}/analyst/solicitations/search?q={{tag}}&sort=estimatedValue,desc
+Authorization: Bearer {{analyst_token}}
+
+### ================= PARÂMETROS INVÁLIDOS =================
+
+### size 0 -> 400, VALIDATION_ERROR com fieldErrors
+GET {{host}}/analyst/solicitations/search?size=0
+Authorization: Bearer {{analyst_token}}
+
+### size acima de 100 -> 400
+GET {{host}}/analyst/solicitations/search?size=101
+Authorization: Bearer {{analyst_token}}
+
+### Ordenar por um campo não permitido -> 400
+GET {{host}}/analyst/solicitations/search?sort=title,asc
+Authorization: Bearer {{analyst_token}}
+
+### UF inexistente -> 400
+GET {{host}}/analyst/solicitations/search?state=XX
+Authorization: Bearer {{analyst_token}}
+
+### Status desconhecido -> 400
+GET {{host}}/analyst/solicitations/search?status=NOPE
+Authorization: Bearer {{analyst_token}}
+
+### ================= QUEM PODE BUSCAR =================
+
+### O ADMIN busca em todas as UFs (A, B e C), mas continua sem ver o rascunho -> 200, total 3
+GET {{host}}/analyst/solicitations/search?q={{tag}}
+Authorization: Bearer {{admin_token}}
+
+### O ADMIN também pode restringir por UF -> 200, total 1 (C)
+GET {{host}}/analyst/solicitations/search?q={{tag}}&state=RJ
+Authorization: Bearer {{admin_token}}
+
+### CLIENT não busca -> 403
+GET {{host}}/analyst/solicitations/search?q={{tag}}
+Authorization: Bearer {{client_token}}
+
+### Sem token -> 401
+GET {{host}}/analyst/solicitations/search?q={{tag}}

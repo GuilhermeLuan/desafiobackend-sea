@@ -139,6 +139,21 @@ Authorization: Bearer {{client_token}}
 ### Sem token -> 401
 POST {{host}}/solicitations
 
-### ADMIN não acessa as rotas do cliente -> 403 (rode o login do admin em users.http antes)
+### Login como ADMIN, para o teste seguinte (ajuste as duas variáveis se o seu .env for diferente) -> 200
+@admin_email = admin@example.com
+@admin_password = change-me-123
+POST {{host}}/auth/login
+Content-Type: application/json
+
+{
+  "email": "{{admin_email}}",
+  "password": "{{admin_password}}"
+}
+
+> {%
+    client.global.set("admin_token", response.body.token);
+%}
+
+### ADMIN não acessa as rotas do cliente (ele analisa, mas não é o dono) -> 403
 POST {{host}}/solicitations
-Authorization: Bearer {{token}}
+Authorization: Bearer {{admin_token}}
