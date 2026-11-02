@@ -45,7 +45,7 @@ Pré-requisito: Docker com o Compose v2.
    ```
 
    O serviço `app` só inicia depois que o banco e o Elasticsearch passam no healthcheck, e a própria aplicação tem um
-   healthcheck. O `compose.dev.yaml` é só para desenvolvimento (veja "Rodando pela IDE") e o Docker Compose não o usa
+   healthcheck (`/actuator/health`, que também reflete a saúde do banco e do Elasticsearch). O `compose.dev.yaml` é só para desenvolvimento (veja "Rodando pela IDE") e o Docker Compose não o usa
    por padrão.
 
 3. **Acesse a API** em `http://localhost:8080`. A documentação interativa (**Swagger UI**) fica em

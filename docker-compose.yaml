@@ -16,7 +16,7 @@ services:
     ports:
       - '8080:8080'
     healthcheck:
-      test: [ 'CMD-SHELL', 'curl -s -o /dev/null http://localhost:8080/auth/login' ]
+      test: [ 'CMD-SHELL', 'curl -fs http://localhost:8080/actuator/health || exit 1' ]
       interval: 10s
       timeout: 5s
       retries: 12
