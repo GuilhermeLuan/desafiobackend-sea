@@ -1,12 +1,16 @@
 package dev.guilhermeluan.desafiobackend.desafiobackend_sea.users;
 
 import jakarta.persistence.*;
+import lombok.Getter;
+import lombok.Setter;
 
 import java.util.HashSet;
 import java.util.Set;
 
 @Entity
 @Table(name = "tb_users")
+@Getter
+@Setter
 public class User {
     @Id
     @GeneratedValue(strategy = GenerationType.IDENTITY)
@@ -35,45 +39,5 @@ public class User {
         this.email = email;
         this.passwordHash = passwordHash;
         this.role = role;
-    }
-
-    public Long getId() {
-        return id;
-    }
-
-    public void setId(Long id) {
-        this.id = id;
-    }
-
-    public String getEmail() {
-        return email;
-    }
-
-    public void setEmail(String email) {
-        this.email = email;
-    }
-
-    public String getPasswordHash() {
-        return passwordHash;
-    }
-
-    public void setPasswordHash(String passwordHash) {
-        this.passwordHash = passwordHash;
-    }
-
-    public Role getRole() {
-        return role;
-    }
-
-    public void setRole(Role role) {
-        this.role = role;
-    }
-
-    public Set<String> getCoverageUfs() {
-        return coverageUfs;
-    }
-
-    public void setCoverageUfs(Set<String> coverageUfs) {
-        this.coverageUfs = coverageUfs;
     }
 }
