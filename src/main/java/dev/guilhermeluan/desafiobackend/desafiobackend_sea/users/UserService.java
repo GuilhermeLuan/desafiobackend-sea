@@ -1,5 +1,7 @@
 package dev.guilhermeluan.desafiobackend.desafiobackend_sea.users;
 
+import dev.guilhermeluan.desafiobackend.desafiobackend_sea.audit.Audit;
+import dev.guilhermeluan.desafiobackend.desafiobackend_sea.audit.AuditAction;
 import org.springframework.dao.DataIntegrityViolationException;
 import org.springframework.security.authentication.BadCredentialsException;
 import org.springframework.security.crypto.password.PasswordEncoder;
@@ -37,6 +39,7 @@ public class UserService {
         return user;
     }
 
+    @Audit(action = AuditAction.CREATE_USER, resourceId = "#result.id")
     public User createPrivilegedUser(String email, String password, Role role, Set<String> coverageUfs) {
         if (role != Role.ANALYST && role != Role.ADMIN) {
             throw new InvalidRoleException(role);

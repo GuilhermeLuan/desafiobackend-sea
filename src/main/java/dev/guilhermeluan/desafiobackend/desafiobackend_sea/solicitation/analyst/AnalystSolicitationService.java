@@ -1,5 +1,7 @@
 package dev.guilhermeluan.desafiobackend.desafiobackend_sea.solicitation.analyst;
 
+import dev.guilhermeluan.desafiobackend.desafiobackend_sea.audit.Audit;
+import dev.guilhermeluan.desafiobackend.desafiobackend_sea.audit.AuditAction;
 import dev.guilhermeluan.desafiobackend.desafiobackend_sea.coverage.CoverageGuard;
 import dev.guilhermeluan.desafiobackend.desafiobackend_sea.solicitation.*;
 import dev.guilhermeluan.desafiobackend.desafiobackend_sea.users.Role;
@@ -27,6 +29,7 @@ public class AnalystSolicitationService {
     }
 
     @Transactional
+    @Audit(action = AuditAction.START, resourceId = "#id")
     public Solicitation start(String analystEmail, Long id) {
         Solicitation solicitation = findVisible(analystEmail, id);
 
@@ -38,6 +41,7 @@ public class AnalystSolicitationService {
     }
 
     @Transactional
+    @Audit(action = AuditAction.DECIDE, resourceId = "#id")
     public Solicitation decide(String analystEmail, Long analystId, Long id, Decision decision, String comment) {
         Solicitation solicitation = findVisible(analystEmail, id);
 

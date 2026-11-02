@@ -1,5 +1,7 @@
 package dev.guilhermeluan.desafiobackend.desafiobackend_sea.solicitation.client;
 
+import dev.guilhermeluan.desafiobackend.desafiobackend_sea.audit.Audit;
+import dev.guilhermeluan.desafiobackend.desafiobackend_sea.audit.AuditAction;
 import dev.guilhermeluan.desafiobackend.desafiobackend_sea.cep.CepClient;
 import dev.guilhermeluan.desafiobackend.desafiobackend_sea.cep.CepResult;
 import dev.guilhermeluan.desafiobackend.desafiobackend_sea.cep.InvalidCepException;
@@ -93,6 +95,7 @@ public class SolicitationService {
     }
 
     @Transactional
+    @Audit(action = AuditAction.SUBMIT, resourceId = "#id")
     public Solicitation submit(Long ownerId, Long id) {
         Solicitation draft = findOwned(ownerId, id);
 

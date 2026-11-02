@@ -1,5 +1,7 @@
 package dev.guilhermeluan.desafiobackend.desafiobackend_sea.auth;
 
+import dev.guilhermeluan.desafiobackend.desafiobackend_sea.audit.Audit;
+import dev.guilhermeluan.desafiobackend.desafiobackend_sea.audit.AuditAction;
 import dev.guilhermeluan.desafiobackend.desafiobackend_sea.auth.jwt.JwtUtils;
 import dev.guilhermeluan.desafiobackend.desafiobackend_sea.users.Role;
 import dev.guilhermeluan.desafiobackend.desafiobackend_sea.users.User;
@@ -22,6 +24,7 @@ public class AuthService {
         this.userService = userService;
     }
 
+    @Audit(action = AuditAction.REGISTER, resourceId = "#result.id")
     public User register(String email, String password) {
         return userService.createUser(email, password, Role.CLIENT);
     }
