@@ -3,6 +3,7 @@ package dev.guilhermeluan.desafiobackend.desafiobackend_sea.solicitation;
 import org.junit.jupiter.api.Test;
 import org.junit.jupiter.params.ParameterizedTest;
 import org.junit.jupiter.params.provider.EnumSource;
+import org.springframework.test.util.ReflectionTestUtils;
 
 import java.math.BigDecimal;
 import java.time.LocalDate;
@@ -284,5 +285,53 @@ class SolicitationStepsTest {
 
         assertEquals(Priority.MEDIUM, solicitation.getPriority());
         assertEquals(new BigDecimal("250.00"), solicitation.getEstimatedValue());
+    }
+
+    // revalidação no submit: as regras que dependem do tempo ou de dois campos valem de novo
+
+    @Test
+    void aFilledDraftIsSubmittable() {
+        assertDoesNotThrow(() -> filledDraft().assertSubmittable(LocalDate.now()));
+    }
+
+    @Test
+    void aPreferredDateThatIsTodayOrLaterIsStillAccepted() {
+        Solicitation solicitation = filledDraft();
+
+        assertDoesNotThrow(() -> solicitation.assertSubmittable(TOMORROW.minusDays(1)));
+        assertDoesNotThrow(() -> solicitation.assertSubmittable(TOMORROW));
+    }
+
+    @Test
+    void aPreferredDateThatBecamePastSinceItWasSavedIsRejected() {
+        Solicitation solicitation = filledDraft();
+
+        assertThrows(InvalidSolicitationDataException.class, () -> solicitation.assertSubmittable(TOMORROW.plusDays(1)));
+        assertEquals(Status.DRAFT, solicitation.getStatus());
+    }
+
+    @Test
+    void withoutAPreferredDateThereIsNothingToExpire() {
+        Solicitation solicitation = saveStep2(saveStep1(Solicitation.draft(OWNER_ID)));
+        solicitation.saveConfirmation(Priority.LOW, null, BigDecimal.TEN, true);
+
+        assertDoesNotThrow(() -> solicitation.assertSubmittable(LocalDate.now().plusYears(5)));
+    }
+
+    @Test
+    void aHighPriorityBelowTheMinimumValueIsRejectedEvenIfItSomehowGotThrough() {
+        Solicitation solicitation = filledDraft();
+        ReflectionTestUtils.setField(solicitation, "priority", Priority.HIGH);
+        ReflectionTestUtils.setField(solicitation, "estimatedValue", new BigDecimal("50.00"));
+
+        assertThrows(InvalidSolicitationDataException.class, () -> solicitation.assertSubmittable(LocalDate.now()));
+    }
+
+    @ParameterizedTest
+    @EnumSource(value = Status.class, names = "DRAFT", mode = EnumSource.Mode.EXCLUDE)
+    void theStateIsCheckedBeforeTheDataSoAResubmitIsAConflictNotABadRequest(Status status) {
+        Solicitation solicitation = filledIn(status);
+
+        assertThrows(InvalidSolicitationStateException.class, () -> solicitation.assertSubmittable(TOMORROW.plusDays(30)));
     }
 }

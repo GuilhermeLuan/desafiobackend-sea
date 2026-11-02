@@ -166,10 +166,7 @@ public class Solicitation {
             throw new InvalidSolicitationStateException("Step 2 must be saved before the confirmation");
         }
 
-        if (priority == Priority.HIGH
-            && (estimatedValue == null || estimatedValue.compareTo(HIGH_PRIORITY_MIN_VALUE) < 0)) {
-            throw new InvalidSolicitationDataException("High priority requires an estimated value of at least 100");
-        }
+        requireValueForHighPriority(priority, estimatedValue);
 
         this.priority = priority;
         this.preferredDate = preferredDate;
@@ -177,6 +174,27 @@ public class Solicitation {
         this.termsAccepted = termsAccepted;
 
         advanceTo(LAST_STEP);
+    }
+
+    /**
+     * Revalida no submit as regras que podem ter mudado desde que a etapa 3 foi salva: a data preferida pode ter
+     * passado (a regra é "não pode ser passada") e a regra cruzada de prioridade e valor continua valendo.
+     * O estado é checado primeiro, para um reenvio ser um conflito e não um erro de dados.
+     */
+    public void assertSubmittable(LocalDate today) {
+        assertEditable();
+
+        if (preferredDate != null && preferredDate.isBefore(today)) {
+            throw new InvalidSolicitationDataException("Preferred date is in the past; save step 3 again before submitting");
+        }
+        requireValueForHighPriority(priority, estimatedValue);
+    }
+
+    private static void requireValueForHighPriority(Priority priority, BigDecimal estimatedValue) {
+        if (priority == Priority.HIGH
+            && (estimatedValue == null || estimatedValue.compareTo(HIGH_PRIORITY_MIN_VALUE) < 0)) {
+            throw new InvalidSolicitationDataException("High priority requires an estimated value of at least 100");
+        }
     }
 
     private void advanceTo(int step) {

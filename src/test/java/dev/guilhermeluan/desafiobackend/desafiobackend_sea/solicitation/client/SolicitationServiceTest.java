@@ -455,4 +455,32 @@ class SolicitationServiceTest {
 
         verifyNoInteractions(events);
     }
+
+    // revalidação no submit
+
+    @Test
+    void submitIsRejectedWhenThePreferredDateHasPassedSinceStepThreeWasSaved() {
+        withStepTwoSaved();
+        draft.saveConfirmation(Priority.LOW, LocalDate.now().minusDays(1), BigDecimal.TEN, true);
+
+        assertThrows(InvalidSolicitationDataException.class, () -> service.submit(OWNER_ID, ID));
+
+        assertEquals(Status.DRAFT, draft.getStatus());
+        verifyNoInteractions(events);
+    }
+
+    @Test
+    void submitAcceptsAPreferredDateThatIsToday() {
+        withStepTwoSaved();
+        draft.saveConfirmation(Priority.LOW, LocalDate.now(), BigDecimal.TEN, true);
+
+        assertEquals(Status.SUBMITTED, service.submit(OWNER_ID, ID).getStatus());
+    }
+
+    @Test
+    void anIncompleteDraftIsReportedAsIncompleteNotAsAnInvalidDate() {
+        withStepOneSaved();
+
+        assertThrows(IncompleteSolicitationException.class, () -> service.submit(OWNER_ID, ID));
+    }
 }

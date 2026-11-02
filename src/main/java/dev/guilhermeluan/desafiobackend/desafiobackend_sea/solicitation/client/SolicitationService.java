@@ -13,6 +13,7 @@ import org.springframework.context.ApplicationEventPublisher;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 
+import java.time.LocalDate;
 import java.util.*;
 
 
@@ -116,6 +117,8 @@ public class SolicitationService {
         if (!missingSteps.isEmpty()) {
             throw new IncompleteSolicitationException(missingSteps, missingFields);
         }
+
+        draft.assertSubmittable(LocalDate.now());
         draft.submit();
 
         events.publishEvent(new SolicitationChangedEvent(id));
