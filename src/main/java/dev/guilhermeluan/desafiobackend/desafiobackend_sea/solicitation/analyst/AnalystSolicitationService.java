@@ -24,14 +24,14 @@ public class AnalystSolicitationService {
     }
 
     @Transactional(readOnly = true)
-    public Solicitation get(String analystEmail, Long id) {
-        return findVisible(analystEmail, id);
+    public Solicitation get(String email, Role role, Long id) {
+        return findVisible(email, role, id);
     }
 
     @Transactional
     @Audit(action = AuditAction.START, resourceId = "#id")
-    public Solicitation start(String analystEmail, Long id) {
-        Solicitation solicitation = findVisible(analystEmail, id);
+    public Solicitation start(String email, Role role, Long id) {
+        Solicitation solicitation = findVisible(email, role, id);
 
         solicitation.start();
 
@@ -42,8 +42,8 @@ public class AnalystSolicitationService {
 
     @Transactional
     @Audit(action = AuditAction.DECIDE, resourceId = "#id")
-    public Solicitation decide(String analystEmail, Long analystId, Long id, Decision decision, String comment) {
-        Solicitation solicitation = findVisible(analystEmail, id);
+    public Solicitation decide(String email, Role role, Long analystId, Long id, Decision decision, String comment) {
+        Solicitation solicitation = findVisible(email, role, id);
 
         solicitation.decide(decision, analystId, comment);
 
@@ -52,14 +52,14 @@ public class AnalystSolicitationService {
         return solicitation;
     }
 
-    private Solicitation findVisible(String email, Long id) {
+    private Solicitation findVisible(String email, Role role, Long id) {
         Solicitation solicitation = solicitationRepository.findById(id).orElseThrow(() -> new SolicitationNotFoundException(id));
 
         if (solicitation.getStatus() == Status.DRAFT) {
             throw new SolicitationNotFoundException(id);
         }
 
-        coverageGuard.assertCovers(email, Role.ANALYST, solicitation.getState());
+        coverageGuard.assertCovers(email, role, solicitation.getState());
 
         return solicitation;
     }

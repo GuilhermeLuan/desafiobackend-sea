@@ -3,6 +3,7 @@ package dev.guilhermeluan.desafiobackend.desafiobackend_sea.search;
 import dev.guilhermeluan.desafiobackend.desafiobackend_sea.search.dtos.PageResponse;
 import dev.guilhermeluan.desafiobackend.desafiobackend_sea.search.dtos.SolicitationSearchItem;
 import dev.guilhermeluan.desafiobackend.desafiobackend_sea.search.dtos.SolicitationSearchParams;
+import dev.guilhermeluan.desafiobackend.desafiobackend_sea.auth.CurrentRole;
 import jakarta.validation.Valid;
 import org.springframework.security.core.Authentication;
 import org.springframework.web.bind.annotation.GetMapping;
@@ -21,6 +22,6 @@ public class SolicitationSearchController {
 
     @GetMapping("/search")
     public PageResponse<SolicitationSearchItem> search(@Valid SolicitationSearchParams params, Authentication authentication) {
-        return searchService.search(authentication.getName(), params);
+        return searchService.search(authentication.getName(), CurrentRole.of(authentication), params);
     }
 }

@@ -2,6 +2,7 @@ package dev.guilhermeluan.desafiobackend.desafiobackend_sea.search;
 
 import co.elastic.clients.elasticsearch._types.FieldValue;
 import co.elastic.clients.elasticsearch._types.query_dsl.Query;
+import dev.guilhermeluan.desafiobackend.desafiobackend_sea.coverage.Coverage;
 import dev.guilhermeluan.desafiobackend.desafiobackend_sea.coverage.CoverageGuard;
 import dev.guilhermeluan.desafiobackend.desafiobackend_sea.search.dtos.PageResponse;
 import dev.guilhermeluan.desafiobackend.desafiobackend_sea.search.dtos.SolicitationSearchItem;
@@ -29,6 +30,14 @@ public class SolicitationSearchService {
     public SolicitationSearchService(ElasticsearchOperations elasticsearchOperations, CoverageGuard coverageGuard) {
         this.elasticsearchOperations = elasticsearchOperations;
         this.coverageGuard = coverageGuard;
+    }
+
+    // cobertura restrita (analista): só as UFs dela. Irrestrita (admin): sem filtro de UF.
+    private static List<Query> coverageFilter(Coverage coverage) {
+        if (coverage.isUnrestricted()) {
+            return List.of();
+        }
+        return List.of(termsIn("state", List.copyOf(coverage.ufs())));
     }
 
     private static List<Query> userFilters(SolicitationSearchParams params) {
@@ -88,14 +97,14 @@ public class SolicitationSearchService {
         return Sort.by(params.ascending() ? Sort.Direction.ASC : Sort.Direction.DESC, params.sortField());
     }
 
-    public PageResponse<SolicitationSearchItem> search(String analystEmail, SolicitationSearchParams params) {
-        List<String> coveredUfs = List.copyOf(coverageGuard.coverageOf(analystEmail, Role.ANALYST).ufs());
+    public PageResponse<SolicitationSearchItem> search(String email, Role role, SolicitationSearchParams params) {
+        Coverage coverage = coverageGuard.coverageOf(email, role);
 
         NativeQuery query = NativeQuery.builder()
                 .withQuery(Query.of(q -> q.bool(b -> b
-                        // regras do SERVIDOR: o analista não consegue remover nenhuma
+                        // regras do SERVIDOR: o usuário não consegue remover nenhuma
                         .mustNot(term("status", "DRAFT"))
-                        .filter(termsIn("state", coveredUfs))
+                        .filter(coverageFilter(coverage))
                         // filtros do usuário
                         .filter(userFilters(params))
                         .must(textQuery(params)))))

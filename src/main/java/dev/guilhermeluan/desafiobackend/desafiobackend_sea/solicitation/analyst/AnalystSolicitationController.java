@@ -1,5 +1,6 @@
 package dev.guilhermeluan.desafiobackend.desafiobackend_sea.solicitation.analyst;
 
+import dev.guilhermeluan.desafiobackend.desafiobackend_sea.auth.CurrentRole;
 import dev.guilhermeluan.desafiobackend.desafiobackend_sea.solicitation.analyst.dtos.DecideRequest;
 import dev.guilhermeluan.desafiobackend.desafiobackend_sea.solicitation.dtos.SolicitationResponse;
 import dev.guilhermeluan.desafiobackend.desafiobackend_sea.users.UserService;
@@ -21,12 +22,12 @@ public class AnalystSolicitationController {
 
     @GetMapping("/{id}")
     public SolicitationResponse get(@PathVariable Long id, Authentication authentication) {
-        return SolicitationResponse.from(analystSolicitationService.get(authentication.getName(), id));
+        return SolicitationResponse.from(analystSolicitationService.get(authentication.getName(), CurrentRole.of(authentication), id));
     }
 
     @PostMapping("/{id}/start")
     public SolicitationResponse start(@PathVariable Long id, Authentication authentication) {
-        return SolicitationResponse.from(analystSolicitationService.start(authentication.getName(), id));
+        return SolicitationResponse.from(analystSolicitationService.start(authentication.getName(), CurrentRole.of(authentication), id));
     }
 
     @PostMapping("/{id}/decide")
@@ -35,6 +36,6 @@ public class AnalystSolicitationController {
         String email = authentication.getName();
         Long analystId = userService.findIdByEmail(email);
         return SolicitationResponse.from(
-                analystSolicitationService.decide(email, analystId, id, request.decision(), request.comment()));
+                analystSolicitationService.decide(email, CurrentRole.of(authentication), analystId, id, request.decision(), request.comment()));
     }
 }

@@ -3,6 +3,7 @@ package dev.guilhermeluan.desafiobackend.desafiobackend_sea.solicitation.analyst
 import dev.guilhermeluan.desafiobackend.desafiobackend_sea.coverage.CoverageAccessDeniedException;
 import dev.guilhermeluan.desafiobackend.desafiobackend_sea.coverage.CoverageGuard;
 import dev.guilhermeluan.desafiobackend.desafiobackend_sea.solicitation.*;
+import dev.guilhermeluan.desafiobackend.desafiobackend_sea.users.Role;
 import dev.guilhermeluan.desafiobackend.desafiobackend_sea.users.UserRepository;
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
@@ -26,6 +27,8 @@ import static org.mockito.Mockito.*;
 class AnalystSolicitationServiceTest {
 
     private static final String ANALYST_EMAIL = "analyst@example.com";
+    private static final String ADMIN_EMAIL = "admin@example.com";
+    private static final Long ADMIN_ID = 1L;
     private static final Long ANALYST_ID = 20L;
     private static final Long OWNER_ID = 10L;
     private static final Long ID = 1L;
@@ -74,28 +77,28 @@ class AnalystSolicitationServiceTest {
     void getReturnsASubmittedSolicitationInACoveredUf() {
         Solicitation solicitation = submittedIn("RJ");
 
-        assertSame(solicitation, service.get(ANALYST_EMAIL, ID));
+        assertSame(solicitation, service.get(ANALYST_EMAIL, Role.ANALYST, ID));
     }
 
     @Test
     void getIsDeniedForAnUfOutsideTheCoverage() {
         submittedIn("MG");
 
-        assertThrows(CoverageAccessDeniedException.class, () -> service.get(ANALYST_EMAIL, ID));
+        assertThrows(CoverageAccessDeniedException.class, () -> service.get(ANALYST_EMAIL, Role.ANALYST, ID));
     }
 
     @Test
     void getFailsForAnIdThatDoesNotExist() {
         when(solicitationRepository.findById(99L)).thenReturn(Optional.empty());
 
-        assertThrows(SolicitationNotFoundException.class, () -> service.get(ANALYST_EMAIL, 99L));
+        assertThrows(SolicitationNotFoundException.class, () -> service.get(ANALYST_EMAIL, Role.ANALYST, 99L));
     }
 
     @Test
     void getHidesDraftsEvenInACoveredUf() {
         draftIn("RJ");
 
-        assertThrows(SolicitationNotFoundException.class, () -> service.get(ANALYST_EMAIL, ID));
+        assertThrows(SolicitationNotFoundException.class, () -> service.get(ANALYST_EMAIL, Role.ANALYST, ID));
     }
 
     @ParameterizedTest
@@ -111,7 +114,7 @@ class AnalystSolicitationServiceTest {
             default -> throw new IllegalStateException(status.name());
         }
 
-        assertEquals(status, service.get(ANALYST_EMAIL, ID).getStatus());
+        assertEquals(status, service.get(ANALYST_EMAIL, Role.ANALYST, ID).getStatus());
     }
 
     // start
@@ -120,14 +123,14 @@ class AnalystSolicitationServiceTest {
     void startMovesASubmittedSolicitationToInReview() {
         submittedIn("RJ");
 
-        assertEquals(Status.IN_REVIEW, service.start(ANALYST_EMAIL, ID).getStatus());
+        assertEquals(Status.IN_REVIEW, service.start(ANALYST_EMAIL, Role.ANALYST, ID).getStatus());
     }
 
     @Test
     void startIsDeniedForAnUfOutsideTheCoverageAndChangesNothing() {
         Solicitation solicitation = submittedIn("MG");
 
-        assertThrows(CoverageAccessDeniedException.class, () -> service.start(ANALYST_EMAIL, ID));
+        assertThrows(CoverageAccessDeniedException.class, () -> service.start(ANALYST_EMAIL, Role.ANALYST, ID));
 
         assertEquals(Status.SUBMITTED, solicitation.getStatus());
     }
@@ -136,21 +139,21 @@ class AnalystSolicitationServiceTest {
     void startHidesDrafts() {
         draftIn("RJ");
 
-        assertThrows(SolicitationNotFoundException.class, () -> service.start(ANALYST_EMAIL, ID));
+        assertThrows(SolicitationNotFoundException.class, () -> service.start(ANALYST_EMAIL, Role.ANALYST, ID));
     }
 
     @Test
     void startFailsForAnIdThatDoesNotExist() {
         when(solicitationRepository.findById(99L)).thenReturn(Optional.empty());
 
-        assertThrows(SolicitationNotFoundException.class, () -> service.start(ANALYST_EMAIL, 99L));
+        assertThrows(SolicitationNotFoundException.class, () -> service.start(ANALYST_EMAIL, Role.ANALYST, 99L));
     }
 
     @Test
     void startTwiceIsRejected() {
         Solicitation solicitation = inReviewIn("RJ");
 
-        assertThrows(InvalidSolicitationStateException.class, () -> service.start(ANALYST_EMAIL, ID));
+        assertThrows(InvalidSolicitationStateException.class, () -> service.start(ANALYST_EMAIL, Role.ANALYST, ID));
 
         assertEquals(Status.IN_REVIEW, solicitation.getStatus());
     }
@@ -162,7 +165,7 @@ class AnalystSolicitationServiceTest {
     void decideRecordsTheDecisionTheAnalystAndTheComment(Decision decision) {
         submittedIn("SP");
 
-        Solicitation result = service.decide(ANALYST_EMAIL, ANALYST_ID, ID, decision, COMMENT);
+        Solicitation result = service.decide(ANALYST_EMAIL, Role.ANALYST, ANALYST_ID, ID, decision, COMMENT);
 
         assertEquals(decision == Decision.APPROVE ? Status.APPROVED : Status.REJECTED, result.getStatus());
         assertEquals(ANALYST_ID, result.getDecidedBy());
@@ -174,7 +177,7 @@ class AnalystSolicitationServiceTest {
         inReviewIn("RJ");
 
         assertEquals(Status.REJECTED,
-                service.decide(ANALYST_EMAIL, ANALYST_ID, ID, Decision.REJECT, COMMENT).getStatus());
+                service.decide(ANALYST_EMAIL, Role.ANALYST, ANALYST_ID, ID, Decision.REJECT, COMMENT).getStatus());
     }
 
     @Test
@@ -182,7 +185,7 @@ class AnalystSolicitationServiceTest {
         Solicitation solicitation = submittedIn("MG");
 
         assertThrows(CoverageAccessDeniedException.class,
-                () -> service.decide(ANALYST_EMAIL, ANALYST_ID, ID, Decision.APPROVE, COMMENT));
+                () -> service.decide(ANALYST_EMAIL, Role.ANALYST, ANALYST_ID, ID, Decision.APPROVE, COMMENT));
 
         assertEquals(Status.SUBMITTED, solicitation.getStatus());
         assertNull(solicitation.getDecidedBy());
@@ -194,7 +197,7 @@ class AnalystSolicitationServiceTest {
         Solicitation solicitation = draftIn("RJ");
 
         assertThrows(SolicitationNotFoundException.class,
-                () -> service.decide(ANALYST_EMAIL, ANALYST_ID, ID, Decision.APPROVE, COMMENT));
+                () -> service.decide(ANALYST_EMAIL, Role.ANALYST, ANALYST_ID, ID, Decision.APPROVE, COMMENT));
 
         assertEquals(Status.DRAFT, solicitation.getStatus());
     }
@@ -204,7 +207,7 @@ class AnalystSolicitationServiceTest {
         when(solicitationRepository.findById(99L)).thenReturn(Optional.empty());
 
         assertThrows(SolicitationNotFoundException.class,
-                () -> service.decide(ANALYST_EMAIL, ANALYST_ID, 99L, Decision.APPROVE, COMMENT));
+                () -> service.decide(ANALYST_EMAIL, Role.ANALYST, ANALYST_ID, 99L, Decision.APPROVE, COMMENT));
     }
 
     @Test
@@ -213,7 +216,7 @@ class AnalystSolicitationServiceTest {
         solicitation.decide(Decision.APPROVE, ANALYST_ID, COMMENT);
 
         assertThrows(InvalidSolicitationStateException.class,
-                () -> service.decide(ANALYST_EMAIL, 99L, ID, Decision.REJECT, "Mudei de ideia sobre isso"));
+                () -> service.decide(ANALYST_EMAIL, Role.ANALYST, 99L, ID, Decision.REJECT, "Mudei de ideia sobre isso"));
 
         assertEquals(Status.APPROVED, solicitation.getStatus());
         assertEquals(ANALYST_ID, solicitation.getDecidedBy());
@@ -233,7 +236,7 @@ class AnalystSolicitationServiceTest {
     void startPublishesAChangedEvent() {
         submittedIn("RJ");
 
-        service.start(ANALYST_EMAIL, ID);
+        service.start(ANALYST_EMAIL, Role.ANALYST, ID);
 
         verify(events).publishEvent(CHANGED);
     }
@@ -242,7 +245,7 @@ class AnalystSolicitationServiceTest {
     void decidePublishesAChangedEvent() {
         submittedIn("SP");
 
-        service.decide(ANALYST_EMAIL, ANALYST_ID, ID, Decision.APPROVE, COMMENT);
+        service.decide(ANALYST_EMAIL, Role.ANALYST, ANALYST_ID, ID, Decision.APPROVE, COMMENT);
 
         verify(events).publishEvent(CHANGED);
     }
@@ -251,7 +254,7 @@ class AnalystSolicitationServiceTest {
     void readingDoesNotPublishAnything() {
         submittedIn("RJ");
 
-        service.get(ANALYST_EMAIL, ID);
+        service.get(ANALYST_EMAIL, Role.ANALYST, ID);
 
         verifyNoInteractions(events);
     }
@@ -260,9 +263,9 @@ class AnalystSolicitationServiceTest {
     void nothingIsPublishedForAnUfOutsideTheCoverage() {
         submittedIn("MG");
 
-        assertThrows(CoverageAccessDeniedException.class, () -> service.start(ANALYST_EMAIL, ID));
+        assertThrows(CoverageAccessDeniedException.class, () -> service.start(ANALYST_EMAIL, Role.ANALYST, ID));
         assertThrows(CoverageAccessDeniedException.class,
-                () -> service.decide(ANALYST_EMAIL, ANALYST_ID, ID, Decision.APPROVE, COMMENT));
+                () -> service.decide(ANALYST_EMAIL, Role.ANALYST, ANALYST_ID, ID, Decision.APPROVE, COMMENT));
 
         verifyNoInteractions(events);
     }
@@ -271,9 +274,9 @@ class AnalystSolicitationServiceTest {
     void nothingIsPublishedForADraft() {
         draftIn("RJ");
 
-        assertThrows(SolicitationNotFoundException.class, () -> service.start(ANALYST_EMAIL, ID));
+        assertThrows(SolicitationNotFoundException.class, () -> service.start(ANALYST_EMAIL, Role.ANALYST, ID));
         assertThrows(SolicitationNotFoundException.class,
-                () -> service.decide(ANALYST_EMAIL, ANALYST_ID, ID, Decision.APPROVE, COMMENT));
+                () -> service.decide(ANALYST_EMAIL, Role.ANALYST, ANALYST_ID, ID, Decision.APPROVE, COMMENT));
 
         verifyNoInteractions(events);
     }
@@ -282,8 +285,54 @@ class AnalystSolicitationServiceTest {
     void nothingIsPublishedWhenTheTransitionIsInvalid() {
         inReviewIn("RJ");
 
-        assertThrows(InvalidSolicitationStateException.class, () -> service.start(ANALYST_EMAIL, ID));
+        assertThrows(InvalidSolicitationStateException.class, () -> service.start(ANALYST_EMAIL, Role.ANALYST, ID));
 
         verifyNoInteractions(events);
+    }
+
+    // ADMIN: pode analisar qualquer UF, mas as regras de visibilidade continuam valendo
+
+    @Test
+    void anAdminReadsASolicitationInAnyUfWithoutConsultingTheCoverage() {
+        Solicitation solicitation = submittedIn("MG");
+
+        assertSame(solicitation, service.get(ADMIN_EMAIL, Role.ADMIN, ID));
+
+        verifyNoInteractions(userRepository);
+    }
+
+    @Test
+    void anAdminCanStartAndDecideInAnyUfAndIsRecordedAsWhoDecided() {
+        submittedIn("MG");
+
+        service.start(ADMIN_EMAIL, Role.ADMIN, ID);
+        Solicitation decided = service.decide(ADMIN_EMAIL, Role.ADMIN, ADMIN_ID, ID, Decision.APPROVE, COMMENT);
+
+        assertEquals(Status.APPROVED, decided.getStatus());
+        assertEquals(ADMIN_ID, decided.getDecidedBy());
+    }
+
+    @Test
+    void anAdminStillCannotSeeDrafts() {
+        draftIn("MG");
+
+        assertThrows(SolicitationNotFoundException.class, () -> service.get(ADMIN_EMAIL, Role.ADMIN, ID));
+        assertThrows(SolicitationNotFoundException.class, () -> service.start(ADMIN_EMAIL, Role.ADMIN, ID));
+    }
+
+    @Test
+    void anAdminsChangesArePublishedToTheIndexToo() {
+        submittedIn("MG");
+
+        service.start(ADMIN_EMAIL, Role.ADMIN, ID);
+
+        verify(events).publishEvent(CHANGED);
+    }
+
+    @Test
+    void aClientRoleHasNoCoverageSoItIsDeniedEvenIfItReachesTheService() {
+        submittedIn("SP");
+
+        assertThrows(CoverageAccessDeniedException.class, () -> service.get("client@example.com", Role.CLIENT, ID));
     }
 }
