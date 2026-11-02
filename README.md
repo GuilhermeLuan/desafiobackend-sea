@@ -58,7 +58,7 @@ Pré-requisito: Docker com o Compose v2.
 |-------------------------------------------------|-------------------------------|
 | app (Spring Boot)                               | 8080                          |
 | PostgreSQL (`mydatabase` / `myuser` / `secret`) | só na rede interna do Compose |
-| Elasticsearch                                   | 9200                          |
+| Elasticsearch                                   | só na rede interna do Compose |
 
 Para parar tudo, use `docker compose down`. Acrescente `-v` para apagar também os volumes de dados.
 
