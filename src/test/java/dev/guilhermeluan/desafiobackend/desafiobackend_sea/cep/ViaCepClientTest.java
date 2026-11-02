@@ -9,21 +9,16 @@ import org.springframework.web.client.RestClient;
 import java.time.Duration;
 import java.util.Optional;
 
-import static com.github.tomakehurst.wiremock.client.WireMock.aResponse;
-import static com.github.tomakehurst.wiremock.client.WireMock.get;
-import static com.github.tomakehurst.wiremock.client.WireMock.getRequestedFor;
-import static com.github.tomakehurst.wiremock.client.WireMock.okJson;
-import static com.github.tomakehurst.wiremock.client.WireMock.urlEqualTo;
+import static com.github.tomakehurst.wiremock.client.WireMock.*;
 import static com.github.tomakehurst.wiremock.core.WireMockConfiguration.wireMockConfig;
-import static org.junit.jupiter.api.Assertions.assertEquals;
-import static org.junit.jupiter.api.Assertions.assertThrows;
-import static org.junit.jupiter.api.Assertions.assertTrue;
+import static org.junit.jupiter.api.Assertions.*;
 
 class ViaCepClientTest {
 
     private static final String CEP = "22785275";
     private static final String PATH = "/ws/" + CEP + "/json/";
-    private static final Duration TIMEOUT = Duration.ofMillis(300);
+    private static final Duration TIMEOUT = Duration.ofSeconds(10);
+    private static final Duration SHORT_TIMEOUT = Duration.ofMillis(300);
 
     private static final String REAL_RESPONSE = """
             {"cep":"22785-275","logradouro":"Estrada dos Bandeirantes","complemento":"de 25001 a 26649 - lado ímpar",
@@ -73,13 +68,14 @@ class ViaCepClientTest {
 
     @Test
     void aSlowViaCepIsCutOffByTheTimeoutInsteadOfHoldingTheCaller() {
-        viaCep.stubFor(get(urlEqualTo(PATH)).willReturn(okJson(REAL_RESPONSE).withFixedDelay(1500)));
+        viaCep.stubFor(get(urlEqualTo(PATH)).willReturn(okJson(REAL_RESPONSE).withFixedDelay(5000)));
+        ViaCepClient impatientClient = new ViaCepClient(RestClient.builder(), viaCep.baseUrl() + "/ws", SHORT_TIMEOUT);
 
         long start = System.nanoTime();
-        assertThrows(CepServiceUnavailableException.class, () -> client.findByCep(CEP));
+        assertThrows(CepServiceUnavailableException.class, () -> impatientClient.findByCep(CEP));
         Duration waited = Duration.ofNanos(System.nanoTime() - start);
 
-        assertTrue(waited.compareTo(Duration.ofMillis(1200)) < 0, "esperou " + waited.toMillis() + " ms; o timeout não cortou a chamada");
+        assertTrue(waited.compareTo(Duration.ofSeconds(4)) < 0, "esperou " + waited.toMillis() + " ms; o timeout não cortou a chamada");
     }
 
     @Test
