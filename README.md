@@ -16,6 +16,7 @@ buscável no Elasticsearch e as ações críticas são auditadas via AOP.
 | Auditoria             | AOP com `@Audit`, gravando em `audit_logs`      |
 | Testes                | JUnit 5, Mockito e Testcontainers               |
 | Documentação          | OpenAPI / Swagger UI (springdoc)                |
+| Métricas              | Micrometer (Actuator), formato Prometheus       |
 | Infra                 | Docker Compose (app + postgres + elasticsearch) |
 
 ## Como subir o projeto com Docker Compose
@@ -50,6 +51,8 @@ Pré-requisito: Docker com o Compose v2.
 3. **Acesse a API** em `http://localhost:8080`. A documentação interativa (**Swagger UI**) fica em
    `http://localhost:8080/swagger-ui.html`, e o JSON OpenAPI em `http://localhost:8080/v3/api-docs`. Para chamar as
    rotas protegidas pelo Swagger UI: faça o login em `POST /auth/login`, copie o token e use o botão **Authorize**.
+   As métricas ficam em `http://localhost:8080/actuator/metrics` (lista) e `http://localhost:8080/actuator/prometheus`
+   (formato Prometheus); o `health` fica em `/actuator/health`.
 
 | Serviço                                         | Porta                         |
 |-------------------------------------------------|-------------------------------|
@@ -191,6 +194,8 @@ A resposta traz `items`, `page`, `size`, `sort` e `total`.
 6. Só é possível editar com `status == DRAFT`.
 7. O submit só vale para o dono e só em `DRAFT`.
 8. "Não existe", "não é seu" e "fora da sua cobertura" respondem exatamente o mesmo `404`, para não revelar quais ids existem.
+9. As rotas do Actuator (`health`, `info`, `metrics` e `prometheus`) ficam **públicas** por ser um teste técnico, e só essas
+   quatro estão expostas (`env`, `beans` e afins não). Em produção seriam restritas ao ADMIN.
 
 ## Erros padronizados
 
@@ -337,11 +342,10 @@ rodar apenas os testes que não usam Docker:
 
 ## Extras
 
-- **Entregues:** a tabela `audit_logs` e a documentação OpenAPI/Swagger (springdoc).
-- **Não feito:** métricas com Micrometer.
+- **Entregues:** a tabela `audit_logs`, a documentação OpenAPI/Swagger (springdoc) e as métricas com Micrometer.
 
 ## Status
 
 O escopo funcional do enunciado está implementado e testado: autenticação com JWT e RBAC por role, dono e UF, fluxo do
 cliente em 3 etapas com ViaCEP, fluxo do analista, indexação e busca no Elasticsearch, erros padronizados, auditoria via
-AOP, documentação OpenAPI/Swagger e Docker Compose.
+AOP, documentação OpenAPI/Swagger, métricas e Docker Compose.
