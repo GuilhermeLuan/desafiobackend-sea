@@ -9,7 +9,6 @@ public final class CurrentRole {
     private CurrentRole() {
     }
 
-    /** O papel do usuário autenticado, a partir da authority "ROLE_X" que o filtro JWT colocou. */
     public static Role of(Authentication authentication) {
         return authentication.getAuthorities().stream()
                 .map(GrantedAuthority::getAuthority)

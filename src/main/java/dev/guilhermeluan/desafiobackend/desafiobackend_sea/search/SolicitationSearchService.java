@@ -32,7 +32,6 @@ public class SolicitationSearchService {
         this.coverageGuard = coverageGuard;
     }
 
-    // cobertura restrita (analista): só as UFs dela. Irrestrita (admin): sem filtro de UF.
     private static List<Query> coverageFilter(Coverage coverage) {
         if (coverage.isUnrestricted()) {
             return List.of();
@@ -102,10 +101,8 @@ public class SolicitationSearchService {
 
         NativeQuery query = NativeQuery.builder()
                 .withQuery(Query.of(q -> q.bool(b -> b
-                        // regras do SERVIDOR: o usuário não consegue remover nenhuma
                         .mustNot(term("status", "DRAFT"))
                         .filter(coverageFilter(coverage))
-                        // filtros do usuário
                         .filter(userFilters(params))
                         .must(textQuery(params)))))
                 .withPageable(PageRequest.of(params.page(), params.size(), sortOf(params)))

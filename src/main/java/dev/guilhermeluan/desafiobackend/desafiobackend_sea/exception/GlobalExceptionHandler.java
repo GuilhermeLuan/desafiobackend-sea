@@ -32,8 +32,6 @@ import java.util.List;
 @RestControllerAdvice
 public class GlobalExceptionHandler extends ResponseEntityExceptionHandler {
 
-    // erros de domínio
-
     private static ResponseEntity<ApiError> respond(HttpStatus status, ErrorCode code, String message, HttpServletRequest request) {
         return ResponseEntity.status(status).body(ApiError.of(status.value(), code, message, request.getRequestURI()));
     }

@@ -73,7 +73,6 @@ public class UserService {
     public Long findIdByEmail(String email) {
         User user = userRepository.findByEmail(email);
         if (user == null) {
-            // token válido de um usuário que não existe mais
             throw new BadCredentialsException("User not found for the authenticated email");
         }
         return user.getId();

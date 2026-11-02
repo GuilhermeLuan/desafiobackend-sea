@@ -2,9 +2,6 @@ package dev.guilhermeluan.desafiobackend.desafiobackend_sea.solicitation.client;
 
 import java.util.List;
 
-/**
- * Submit de um rascunho que ainda tem etapas ou campos obrigatórios por preencher.
- */
 public class IncompleteSolicitationException extends RuntimeException {
 
     private final List<Integer> missingSteps;

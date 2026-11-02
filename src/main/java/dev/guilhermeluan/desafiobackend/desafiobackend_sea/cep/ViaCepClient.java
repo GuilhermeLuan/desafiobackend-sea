@@ -44,7 +44,6 @@ public class ViaCepClient implements CepClient {
                     .retrieve()
                     .body(ViaCepResponse.class);
         } catch (HttpClientErrorException.BadRequest e) {
-            // ViaCEP responde 400 para CEP malformado
             return Optional.empty();
         } catch (RestClientException e) {
             throw new CepServiceUnavailableException("ViaCEP lookup failed", e);

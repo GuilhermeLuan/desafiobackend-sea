@@ -176,11 +176,6 @@ public class Solicitation {
         advanceTo(LAST_STEP);
     }
 
-    /**
-     * Revalida no submit as regras que podem ter mudado desde que a etapa 3 foi salva: a data preferida pode ter
-     * passado (a regra é "não pode ser passada") e a regra cruzada de prioridade e valor continua valendo.
-     * O estado é checado primeiro, para um reenvio ser um conflito e não um erro de dados.
-     */
     public void assertSubmittable(LocalDate today) {
         assertEditable();
 
