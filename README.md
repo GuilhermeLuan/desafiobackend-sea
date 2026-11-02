@@ -15,6 +15,7 @@ buscável no Elasticsearch e as ações críticas são auditadas via AOP.
 | Validação             | Bean Validation, com erros JSON padronizados    |
 | Auditoria             | AOP com `@Audit`, gravando em `audit_logs`      |
 | Testes                | JUnit 5, Mockito e Testcontainers               |
+| Documentação          | OpenAPI / Swagger UI (springdoc)                |
 | Infra                 | Docker Compose (app + postgres + elasticsearch) |
 
 ## Como subir o projeto com Docker Compose
@@ -27,13 +28,14 @@ Pré-requisito: Docker com o Compose v2.
    cp .env.example .env
    ```
 
-   | Variável         | Descrição                                                                                | Padrão               |
-   |------------------|------------------------------------------------------------------------------------------|----------------------|
-   | `JWT_SECRET`     | Segredo usado para assinar os tokens, com pelo menos 32 caracteres (obrigatório)         | —                    |
-   | `JWT_EXPIRATION` | Validade do token, em segundos                                                           | `3600`               |
-   | `JWT_ISSUER`     | Emissor gravado nos tokens                                                               | `desafiobackend-sea` |
-   | `ADMIN_EMAIL`    | Email do **primeiro ADMIN**, criado pela migration `V2` na primeira subida (obrigatório) | —                    |
-   | `ADMIN_PASSWORD` | Senha desse ADMIN (obrigatória)                                                          | —                    |
+   | Variável             | Descrição                                                                                | Padrão               |
+   |----------------------|------------------------------------------------------------------------------------------|----------------------|
+   | `JWT_SECRET`         | Segredo usado para assinar os tokens, com pelo menos 32 caracteres (obrigatório)         | —                    |
+   | `JWT_EXPIRATION`     | Validade do token, em segundos                                                           | `3600`               |
+   | `JWT_ISSUER`         | Emissor gravado nos tokens                                                               | `desafiobackend-sea` |
+   | `ADMIN_EMAIL`        | Email do **primeiro ADMIN**, criado pela migration `V2` na primeira subida (obrigatório) | —                    |
+   | `ADMIN_PASSWORD`     | Senha desse ADMIN (obrigatória)                                                          | —                    |
+   | `SPRINGDOC_ENABLED`  | Liga ou desliga o Swagger UI e o `/v3/api-docs` (opcional)                               | `true`               |
 
 2. **Suba tudo** (app, PostgreSQL e Elasticsearch):
 
@@ -45,7 +47,9 @@ Pré-requisito: Docker com o Compose v2.
    healthcheck. O `compose.dev.yaml` é só para desenvolvimento (veja "Rodando pela IDE") e o Docker Compose não o usa
    por padrão.
 
-3. **Acesse a API** em `http://localhost:8080`.
+3. **Acesse a API** em `http://localhost:8080`. A documentação interativa (**Swagger UI**) fica em
+   `http://localhost:8080/swagger-ui.html`, e o JSON OpenAPI em `http://localhost:8080/v3/api-docs`. Para chamar as
+   rotas protegidas pelo Swagger UI: faça o login em `POST /auth/login`, copie o token e use o botão **Authorize**.
 
 | Serviço                                         | Porta                         |
 |-------------------------------------------------|-------------------------------|
@@ -333,11 +337,11 @@ rodar apenas os testes que não usam Docker:
 
 ## Extras
 
-- **Entregue:** a tabela `audit_logs`.
-- **Não feitos:** documentação OpenAPI/Swagger e métricas com Micrometer.
+- **Entregues:** a tabela `audit_logs` e a documentação OpenAPI/Swagger (springdoc).
+- **Não feito:** métricas com Micrometer.
 
 ## Status
 
 O escopo funcional do enunciado está implementado e testado: autenticação com JWT e RBAC por role, dono e UF, fluxo do
 cliente em 3 etapas com ViaCEP, fluxo do analista, indexação e busca no Elasticsearch, erros padronizados, auditoria via
-AOP e Docker Compose.
+AOP, documentação OpenAPI/Swagger e Docker Compose.
