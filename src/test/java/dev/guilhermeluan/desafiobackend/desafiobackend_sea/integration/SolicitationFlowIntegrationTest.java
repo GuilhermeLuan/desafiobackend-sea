@@ -7,12 +7,7 @@ import static org.springframework.test.web.servlet.request.MockMvcRequestBuilder
 import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.jsonPath;
 import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.status;
 
-/**
- * Fluxo crítico de ponta a ponta: cliente cria e envia, analista da UF consulta, inicia e decide.
- */
 class SolicitationFlowIntegrationTest extends BaseIntegrationTest {
-
-    // fluxo principal
 
     @Test
     void clientSubmitsAndTheAnalystCoveringTheUfApprovesIt() throws Exception {
@@ -57,8 +52,6 @@ class SolicitationFlowIntegrationTest extends BaseIntegrationTest {
                 .andExpect(jsonPath("$.status").value("REJECTED"));
     }
 
-    // etapas e submit
-
     @Test
     void submitOfAnIncompleteDraftListsWhatIsMissing() throws Exception {
         String clientToken = registerClientAndLogin();
@@ -101,8 +94,6 @@ class SolicitationFlowIntegrationTest extends BaseIntegrationTest {
         send(post("/solicitations/" + id + "/submit"), clientToken).andExpect(status().isConflict());
     }
 
-    // isolamento entre clientes
-
     @Test
     void anotherClientCannotSeeEditOrSubmitSomeoneElsesSolicitation() throws Exception {
         long id = createDraft(registerClientAndLogin());
@@ -112,8 +103,6 @@ class SolicitationFlowIntegrationTest extends BaseIntegrationTest {
         send(put("/solicitations/" + id + "/steps/1"), intruderToken, BASIC_DATA).andExpect(status().isNotFound());
         send(post("/solicitations/" + id + "/submit"), intruderToken).andExpect(status().isNotFound());
     }
-
-    // cobertura do analista
 
     @Test
     void anAnalystOutsideTheCoverageGetsNotFoundAndNothingChanges() throws Exception {
@@ -171,8 +160,6 @@ class SolicitationFlowIntegrationTest extends BaseIntegrationTest {
 
         send(get("/analyst/solicitations/" + id), analystToken).andExpect(status().isNotFound());
     }
-
-    // papéis
 
     @Test
     void eachRoleStaysInItsOwnArea() throws Exception {

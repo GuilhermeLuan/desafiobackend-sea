@@ -40,9 +40,6 @@ class SolicitationStepsTest {
         return saveStep3(saveStep2(saveStep1(Solicitation.draft(OWNER_ID))));
     }
 
-    /**
-     * Solicitação com as três etapas preenchidas, levada ao status pedido por transições válidas.
-     */
     private static Solicitation filledIn(Status status) {
         Solicitation solicitation = filledDraft();
 
@@ -67,8 +64,6 @@ class SolicitationStepsTest {
         return solicitation;
     }
 
-    // estado inicial
-
     @Test
     void newDraftStartsAtStepOneWithNoData() {
         Solicitation solicitation = Solicitation.draft(OWNER_ID);
@@ -84,8 +79,6 @@ class SolicitationStepsTest {
         assertNull(solicitation.getEstimatedValue());
         assertFalse(solicitation.isTermsAccepted());
     }
-
-    // etapa 1: dados básicos
 
     @Test
     void saveBasicDataStoresTheFieldsAndMovesToStepTwo() {
@@ -108,8 +101,6 @@ class SolicitationStepsTest {
         assertEquals("Vistoria anual", solicitation.getTitle());
         assertEquals("Vistoria anual das instalações elétricas", solicitation.getDescription());
     }
-
-    // etapa 2: endereço
 
     @Test
     void saveAddressStoresTheResolvedAddressAndMovesToStepThree() {
@@ -149,8 +140,6 @@ class SolicitationStepsTest {
         assertEquals(1, solicitation.getCurrentStep());
     }
 
-    // etapa 3: confirmação
-
     @Test
     void saveConfirmationStoresTheFieldsAndStaysAtStepThree() {
         Solicitation solicitation = saveStep2(saveStep1(Solicitation.draft(OWNER_ID)));
@@ -176,8 +165,6 @@ class SolicitationStepsTest {
         assertFalse(solicitation.isTermsAccepted());
         assertEquals(2, solicitation.getCurrentStep());
     }
-
-    // etapa 3: regra cruzada, prioridade HIGH exige valor estimado >= 100
 
     @Test
     void highPriorityBelowOneHundredIsRejectedAndChangesNothing() {
@@ -221,8 +208,6 @@ class SolicitationStepsTest {
         assertEquals(priority, solicitation.getPriority());
     }
 
-    // reedição e currentStep
-
     @Test
     void resavingAnEarlierStepUpdatesTheDataButNeverMovesCurrentStepBack() {
         Solicitation solicitation = filledDraft();
@@ -247,8 +232,6 @@ class SolicitationStepsTest {
         assertNull(solicitation.getComplement());
         assertEquals(3, solicitation.getCurrentStep());
     }
-
-    // edição só em DRAFT
 
     @ParameterizedTest
     @EnumSource(value = Status.class, names = "DRAFT", mode = EnumSource.Mode.EXCLUDE)
@@ -286,8 +269,6 @@ class SolicitationStepsTest {
         assertEquals(Priority.MEDIUM, solicitation.getPriority());
         assertEquals(new BigDecimal("250.00"), solicitation.getEstimatedValue());
     }
-
-    // revalidação no submit: as regras que dependem do tempo ou de dois campos valem de novo
 
     @Test
     void aFilledDraftIsSubmittable() {

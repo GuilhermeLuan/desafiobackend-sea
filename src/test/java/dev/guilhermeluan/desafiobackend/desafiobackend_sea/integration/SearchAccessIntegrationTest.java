@@ -54,8 +54,6 @@ class SearchAccessIntegrationTest extends BaseIntegrationTest {
         return List.of(ids).stream().sorted().toList();
     }
 
-    // analista: UF forçada pela cobertura e rascunho nunca aparece
-
     @Test
     void anAnalystOnlySeesTheUfsOfTheirCoverage() throws Exception {
         String clientToken = registerClientAndLogin();
@@ -93,8 +91,6 @@ class SearchAccessIntegrationTest extends BaseIntegrationTest {
         search(analystToken, "q=" + token + "&status=DRAFT").andExpect(jsonPath("$.total").value(0));
     }
 
-    // admin: todas as UFs, mas rascunho continua invisível
-
     @Test
     void anAdminSearchesEveryUfButStillNeverSeesDrafts() throws Exception {
         String clientToken = registerClientAndLogin();
@@ -117,8 +113,6 @@ class SearchAccessIntegrationTest extends BaseIntegrationTest {
         assertEquals(sorted(inDf), idsOf(search(adminToken, "q=" + token + "&state=DF")));
         search(adminToken, "q=" + token + "&state=RJ").andExpect(jsonPath("$.total").value(0));
     }
-
-    // papéis
 
     @Test
     void clientsCannotSearchButAnAdminCan() throws Exception {

@@ -44,9 +44,6 @@ class AnalystSolicitationServiceTest {
     @Mock
     private ApplicationEventPublisher events;
 
-    /**
-     * Solicitação completa na UF pedida, ainda em DRAFT, disponível no repositório com o id {@code ID}.
-     */
     private Solicitation draftIn(String uf) {
         Solicitation solicitation = Solicitation.draft(OWNER_ID);
         solicitation.saveBasicData(ServiceType.INSTALLATION, "Instalar ar-condicionado",
@@ -70,8 +67,6 @@ class AnalystSolicitationServiceTest {
         solicitation.start();
         return solicitation;
     }
-
-    // get
 
     @Test
     void getReturnsASubmittedSolicitationInACoveredUf() {
@@ -117,8 +112,6 @@ class AnalystSolicitationServiceTest {
         assertEquals(status, service.get(ANALYST_EMAIL, Role.ANALYST, ID).getStatus());
     }
 
-    // start
-
     @Test
     void startMovesASubmittedSolicitationToInReview() {
         submittedIn("RJ");
@@ -157,8 +150,6 @@ class AnalystSolicitationServiceTest {
 
         assertEquals(Status.IN_REVIEW, solicitation.getStatus());
     }
-
-    // decide
 
     @ParameterizedTest
     @EnumSource(Decision.class)
@@ -223,11 +214,8 @@ class AnalystSolicitationServiceTest {
         assertEquals(COMMENT, solicitation.getDecisionComment());
     }
 
-    // eventos para o índice de busca
-
     @BeforeEach
     void setUp() {
-        // o analista cobre RJ e SP; o guard é o real, só o acesso ao banco é simulado
         lenient().when(userRepository.findCoverageUfsByEmail(ANALYST_EMAIL)).thenReturn(Set.of("RJ", "SP"));
         service = new AnalystSolicitationService(solicitationRepository, new CoverageGuard(userRepository), events);
     }
@@ -289,8 +277,6 @@ class AnalystSolicitationServiceTest {
 
         verifyNoInteractions(events);
     }
-
-    // ADMIN: pode analisar qualquer UF, mas as regras de visibilidade continuam valendo
 
     @Test
     void anAdminReadsASolicitationInAnyUfWithoutConsultingTheCoverage() {

@@ -78,8 +78,6 @@ class SolicitationServiceTest {
         draft.saveConfirmation(Priority.MEDIUM, TOMORROW, new BigDecimal("250.00"), true);
     }
 
-    // createDraft
-
     @Test
     void createDraftSavesADraftOwnedByTheClient() {
         when(solicitationRepository.save(any(Solicitation.class))).thenAnswer(i -> i.getArgument(0));
@@ -90,8 +88,6 @@ class SolicitationServiceTest {
         assertEquals(Status.DRAFT, created.getStatus());
         assertEquals(1, created.getCurrentStep());
     }
-
-    // get
 
     @Test
     void getReturnsTheSolicitationToItsOwner() {
@@ -109,8 +105,6 @@ class SolicitationServiceTest {
 
         assertThrows(SolicitationNotFoundException.class, () -> service.get(OWNER_ID, 99L));
     }
-
-    // etapa 1
 
     @Test
     void saveBasicDataStoresTheFieldsAndMovesToStepTwo() {
@@ -144,8 +138,6 @@ class SolicitationServiceTest {
 
         assertThrows(InvalidSolicitationStateException.class, () -> service.saveBasicData(OWNER_ID, ID, BASIC));
     }
-
-    // etapa 2
 
     @Test
     void saveAddressFillsStreetNeighborhoodCityAndUfFromTheCepLookup() {
@@ -209,8 +201,6 @@ class SolicitationServiceTest {
         assertEquals(1, draft.getCurrentStep());
     }
 
-    // etapa 3
-
     @Test
     void saveConfirmationStoresTheFields() {
         withStepTwoSaved();
@@ -251,8 +241,6 @@ class SolicitationServiceTest {
         assertThrows(InvalidSolicitationStateException.class, () -> service.saveConfirmation(OWNER_ID, ID,
                 new ConfirmationRequest(Priority.LOW, TOMORROW, BigDecimal.TEN, true)));
     }
-
-    // submit
 
     @Test
     void submitMovesACompleteDraftToSubmitted() {
@@ -357,7 +345,6 @@ class SolicitationServiceTest {
         assertEquals(Status.SUBMITTED, draft.getStatus());
     }
 
-    // eventos para o índice de busca
     @Mock
     private ApplicationEventPublisher events;
 
@@ -455,8 +442,6 @@ class SolicitationServiceTest {
 
         verifyNoInteractions(events);
     }
-
-    // revalidação no submit
 
     @Test
     void submitIsRejectedWhenThePreferredDateHasPassedSinceStepThreeWasSaved() {

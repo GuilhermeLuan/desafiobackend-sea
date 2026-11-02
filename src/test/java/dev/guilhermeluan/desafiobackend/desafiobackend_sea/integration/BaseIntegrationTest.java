@@ -76,9 +76,6 @@ public abstract class BaseIntegrationTest {
         return JsonPath.read(body, "$.token");
     }
 
-    /**
-     * Registra um CLIENT novo e devolve o token dele.
-     */
     protected String registerClientAndLogin() throws Exception {
         String email = "client-" + UUID.randomUUID() + "@example.com";
         mockMvc.perform(post("/auth/register").contentType(MediaType.APPLICATION_JSON)
@@ -87,9 +84,6 @@ public abstract class BaseIntegrationTest {
         return login(email, PASSWORD);
     }
 
-    /**
-     * Cria (como ADMIN) um ANALYST novo que cobre as UFs dadas e devolve o token dele.
-     */
     protected String createAnalystAndLogin(String... ufs) throws Exception {
         String email = "analyst-" + UUID.randomUUID() + "@example.com";
         String coverage = "[\"" + String.join("\",\"", ufs) + "\"]";
@@ -98,8 +92,6 @@ public abstract class BaseIntegrationTest {
                 .andExpect(status().isCreated());
         return login(email, PASSWORD);
     }
-
-    // solicitações
 
     protected static final String BASIC_DATA = """
             {"serviceType":"INSTALLATION","title":"Instalar ar-condicionado",

@@ -45,8 +45,6 @@ class AuditIntegrationTest extends BaseIntegrationTest {
         assertNotNull(trail.get(0).getOccurredAt());
     }
 
-    // sucessos
-
     @Test
     void creatingAPrivilegedUserIsAuditedWithTheAdminAsTheActor() throws Exception {
         String email = "analyst-" + UUID.randomUUID() + "@example.com";
@@ -101,8 +99,6 @@ class AuditIntegrationTest extends BaseIntegrationTest {
         assertEquals("IncompleteSolicitationException", trail.get(0).getErrorType());
         assertEquals(client.email(), trail.get(0).getActor());
     }
-
-    // falhas: a operação sofre rollback, mas a tentativa fica registrada
 
     @Test
     void aDeniedDecisionOutsideTheCoverageIsAuditedAsAFailure() throws Exception {

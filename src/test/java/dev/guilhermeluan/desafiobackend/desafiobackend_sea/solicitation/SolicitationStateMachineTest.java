@@ -12,9 +12,6 @@ class SolicitationStateMachineTest {
     private static final Long ANALYST_ID = 20L;
     private static final String COMMENT = "Documentação conferida e aprovada";
 
-    /**
-     * Leva uma solicitação nova até o status pedido, usando só transições válidas.
-     */
     private static Solicitation solicitationIn(Status status) {
         Solicitation solicitation = Solicitation.draft(OWNER_ID);
 
@@ -47,8 +44,6 @@ class SolicitationStateMachineTest {
         assertEquals(OWNER_ID, solicitation.getOwnerId());
     }
 
-    // submit: DRAFT -> SUBMITTED
-
     @Test
     void submitMovesDraftToSubmitted() {
         Solicitation solicitation = solicitationIn(Status.DRAFT);
@@ -68,8 +63,6 @@ class SolicitationStateMachineTest {
         assertEquals(status, solicitation.getStatus());
     }
 
-    // start: SUBMITTED -> IN_REVIEW
-
     @Test
     void startMovesSubmittedToInReview() {
         Solicitation solicitation = solicitationIn(Status.SUBMITTED);
@@ -88,8 +81,6 @@ class SolicitationStateMachineTest {
 
         assertEquals(status, solicitation.getStatus());
     }
-
-    // decide: SUBMITTED | IN_REVIEW -> APPROVED | REJECTED
 
     @ParameterizedTest
     @EnumSource(value = Status.class, names = {"SUBMITTED", "IN_REVIEW"})
@@ -146,8 +137,6 @@ class SolicitationStateMachineTest {
         assertNull(solicitation.getDecisionComment());
     }
 
-    // decide: argumentos obrigatórios
-
     @ParameterizedTest
     @EnumSource(value = Status.class, names = {"SUBMITTED", "IN_REVIEW"})
     void decideWithoutDecisionIsRejectedAndChangesNothing(Status status) {
@@ -184,8 +173,6 @@ class SolicitationStateMachineTest {
         assertNull(solicitation.getDecisionComment());
     }
 
-    // edição: só em DRAFT
-
     @Test
     void draftIsEditable() {
         Solicitation solicitation = solicitationIn(Status.DRAFT);
@@ -200,8 +187,6 @@ class SolicitationStateMachineTest {
 
         assertThrows(InvalidSolicitationStateException.class, solicitation::assertEditable);
     }
-
-    // caminhos completos
 
     @Test
     void fullPathThroughReviewEndsApproved() {

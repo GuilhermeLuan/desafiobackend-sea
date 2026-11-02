@@ -13,8 +13,6 @@ import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.
 
 class ErrorResponseIntegrationTest extends BaseIntegrationTest {
 
-    // validação
-
     @Test
     void validationErrorsListEachInvalidFieldWithItsMessage() throws Exception {
         String clientToken = registerClientAndLogin();
@@ -57,8 +55,6 @@ class ErrorResponseIntegrationTest extends BaseIntegrationTest {
                 .andExpect(jsonPath("$.code").value("MALFORMED_REQUEST"));
     }
 
-    // autenticação e autorização (erros que acontecem antes do controller)
-
     @Test
     void aMissingTokenIsAnUnauthorizedErrorInTheStandardFormat() throws Exception {
         mockMvc.perform(post("/solicitations"))
@@ -97,8 +93,6 @@ class ErrorResponseIntegrationTest extends BaseIntegrationTest {
                 .andExpect(status().isUnauthorized())
                 .andExpect(jsonPath("$.code").value("INVALID_CREDENTIALS"));
     }
-
-    // regras de negócio
 
     @Test
     void registeringTheSameEmailTwiceIsAConflict() throws Exception {
@@ -157,8 +151,6 @@ class ErrorResponseIntegrationTest extends BaseIntegrationTest {
                 .andExpect(jsonPath("$.missingSteps").doesNotExist());
     }
 
-    // CEP
-
     @Test
     void anUnknownCepIsAnInvalidCepError() throws Exception {
         String clientToken = registerClientAndLogin();
@@ -184,8 +176,6 @@ class ErrorResponseIntegrationTest extends BaseIntegrationTest {
                 .andExpect(jsonPath("$.status").value(503))
                 .andExpect(jsonPath("$.code").value("CEP_SERVICE_UNAVAILABLE"));
     }
-
-    // 404 e erros do Spring MVC
 
     @Test
     void aMissingResourceIsANotFoundError() throws Exception {

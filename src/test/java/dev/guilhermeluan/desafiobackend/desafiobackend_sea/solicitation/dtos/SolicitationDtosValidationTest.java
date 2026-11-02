@@ -24,8 +24,6 @@ class SolicitationDtosValidationTest {
         return validator.validate(dto).isEmpty();
     }
 
-    // etapa 1
-
     @Test
     void basicDataAcceptsValidValues() {
         assertTrue(valid(new BasicDataRequest(ServiceType.INSTALLATION, "Instalar ar", VALID_DESCRIPTION)));
@@ -63,8 +61,6 @@ class SolicitationDtosValidationTest {
         assertEquals(VALID_DESCRIPTION, request.description());
     }
 
-    // etapa 2
-
     @Test
     void addressAcceptsCepWithOrWithoutHyphenAndNormalizesIt() {
         assertEquals("01310100", new AddressRequest("01310-100", "1578", null).cep());
@@ -92,8 +88,6 @@ class SolicitationDtosValidationTest {
     void blankComplementBecomesNull() {
         assertNull(new AddressRequest("01310100", "10", "   ").complement());
     }
-
-    // etapa 3
 
     private static ConfirmationRequest confirmation(Priority priority, LocalDate date, BigDecimal value, boolean terms) {
         return new ConfirmationRequest(priority, date, value, terms);
