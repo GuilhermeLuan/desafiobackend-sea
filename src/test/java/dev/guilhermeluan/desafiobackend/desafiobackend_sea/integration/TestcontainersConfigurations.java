@@ -13,7 +13,7 @@ public final class TestcontainersConfigurations {
     @ServiceConnection
     static final PostgreSQLContainer POSTGRES = new PostgreSQLContainer("postgres:18");
 
-    // mesma imagem do compose.yaml; sem segurança (como lá) e com heap limitada para não pesar na máquina
+    // mesma imagem do compose.dev.yaml; sem segurança (como lá) e com heap limitada para não pesar na máquina
     @ServiceConnection
     static final ElasticsearchContainer ELASTICSEARCH =
             new ElasticsearchContainer("docker.elastic.co/elasticsearch/elasticsearch:9.3.3")

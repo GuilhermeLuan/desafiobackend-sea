@@ -34,28 +34,27 @@ Pré-requisito: Docker com o Compose v2.
 2. **Suba tudo** (app, PostgreSQL e Elasticsearch):
 
    ```bash
-   docker compose -f docker-compose.yaml up --build
+   docker compose up --build
    ```
 
-   O `-f docker-compose.yaml` é necessário porque o projeto também tem um `compose.yaml`, que o Docker Compose escolhe
-   por padrão. Ele sobe só o Postgres e o Elasticsearch, para rodar a aplicação pela IDE. O serviço `app` só inicia
-   depois que o banco e o Elasticsearch passam no healthcheck.
+   O serviço `app` só inicia depois que o banco e o Elasticsearch passam no healthcheck. O `compose.dev.yaml` é só para
+   desenvolvimento (veja "Rodando pela IDE") e o Docker Compose não o usa por padrão.
 
 3. **Acesse a API** em `http://localhost:8080`.
 
-| Serviço                                         | Porta |
-|-------------------------------------------------|-------|
-| app (Spring Boot)                               | 8080  |
-| PostgreSQL (`mydatabase` / `myuser` / `secret`) | 5432  |
-| Elasticsearch                                   | 9200  |
+| Serviço                                         | Porta                         |
+|-------------------------------------------------|-------------------------------|
+| app (Spring Boot)                               | 8080                          |
+| PostgreSQL (`mydatabase` / `myuser` / `secret`) | só na rede interna do Compose |
+| Elasticsearch                                   | 9200                          |
 
-Para parar tudo, use `docker compose -f docker-compose.yaml down`. Acrescente `-v` para apagar também os volumes de
+Para parar tudo, use `docker compose down`. Acrescente `-v` para apagar também os volumes de
 dados.
 
 ### Rodando pela IDE (sem containerizar o app)
 
 Com o `.env` criado, rode `DesafiobackendSeaApplication`. O `spring-boot-docker-compose` sobe o Postgres e o
-Elasticsearch a partir do `compose.yaml`, e o Spring lê o `.env` da raiz do projeto. É preciso ter o JDK 21 (há um
+Elasticsearch a partir do `compose.dev.yaml`, e o Spring lê o `.env` da raiz do projeto. É preciso ter o JDK 21 (há um
 `.sdkmanrc` com Temurin 21: `sdk env install`).
 
 ## Perfis de acesso (RBAC)
