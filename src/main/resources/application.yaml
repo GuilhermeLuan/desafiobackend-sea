@@ -30,4 +30,4 @@ springdoc:
     enabled: ${SPRINGDOC_ENABLED:true}
     path: /swagger-ui.html
     tags-sorter: alpha
-    operations-sorter: method
+    operations-sorter: alpha

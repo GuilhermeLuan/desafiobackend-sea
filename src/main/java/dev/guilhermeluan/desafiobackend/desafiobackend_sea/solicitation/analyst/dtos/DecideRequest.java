@@ -7,8 +7,9 @@ import jakarta.validation.constraints.NotNull;
 import jakarta.validation.constraints.Size;
 
 public record DecideRequest(
+        @Schema(example = "APPROVE")
         @NotNull(message = "decision é obrigatório") Decision decision,
-        @Schema(description = "Justificativa da decisão, de 10 a 1000 caracteres")
+        @Schema(description = "Justificativa da decisão, de 10 a 1000 caracteres", example = "Documentação conferida e aprovada")
         @NotBlank(message = "comment é obrigatório")
         @Size(min = 10, max = 1000, message = "comment deve ter entre 10 e 1000 caracteres") String comment
 ) {

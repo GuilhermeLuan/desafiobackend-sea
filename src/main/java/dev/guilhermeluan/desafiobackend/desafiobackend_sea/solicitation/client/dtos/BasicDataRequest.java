@@ -1,14 +1,18 @@
 package dev.guilhermeluan.desafiobackend.desafiobackend_sea.solicitation.client.dtos;
 
 import dev.guilhermeluan.desafiobackend.desafiobackend_sea.solicitation.ServiceType;
+import io.swagger.v3.oas.annotations.media.Schema;
 import jakarta.validation.constraints.NotBlank;
 import jakarta.validation.constraints.NotNull;
 import jakarta.validation.constraints.Size;
 
 public record BasicDataRequest(
+        @Schema(example = "INSTALLATION")
         @NotNull(message = "serviceType é obrigatório") ServiceType serviceType,
+        @Schema(example = "Instalar ar-condicionado")
         @NotBlank(message = "title é obrigatório")
         @Size(min = 3, max = 80, message = "title deve ter entre 3 e 80 caracteres") String title,
+        @Schema(example = "Instalação de um split na sala de estar do apartamento")
         @NotBlank(message = "description é obrigatório")
         @Size(min = 20, max = 1000, message = "description deve ter entre 20 e 1000 caracteres") String description
 ) {

@@ -5,15 +5,14 @@ import jakarta.validation.constraints.NotBlank;
 import jakarta.validation.constraints.Pattern;
 import jakarta.validation.constraints.Size;
 
-/**
- * Só o que o cliente informa; rua, bairro, cidade e UF vêm do ViaCEP.
- */
 public record AddressRequest(
         @Schema(description = "CEP com 8 dígitos (o hífen é opcional)", example = "01310-100")
         @NotBlank(message = "cep é obrigatório")
         @Pattern(regexp = "\\d{8}", message = "cep deve ter 8 dígitos") String cep,
+        @Schema(example = "1578")
         @NotBlank(message = "number é obrigatório")
         @Size(max = 20, message = "number deve ter no máximo 20 caracteres") String number,
+        @Schema(example = "Sala 12")
         @Size(max = 255, message = "complement deve ter no máximo 255 caracteres") String complement
 ) {
 
